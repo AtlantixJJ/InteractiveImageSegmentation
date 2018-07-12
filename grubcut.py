@@ -62,7 +62,7 @@ need_stylization = False
 bbox = [0, 0, 1, 1]
 
 class StylizationThread(threading.Thread):
-    def __init__(self, model_file="models/feathers.ckpt-done"):
+    def __init__(self, model_file="models/starrynight.ckpt-done"):
         threading.Thread.__init__(self)
 
         self.stylized_image = np.zeros((10, 10, 3))
@@ -267,7 +267,10 @@ if __name__ == '__main__':
 
             mask2 = np.where((mask==1) + (mask==3),255,0).astype('uint8')
             output = cv.bitwise_and(img2,img2,mask=mask2)
-
+            seg_img = output
+            seg_mask = mask2
+            bbox = cv.boundingRect(cv.findNonZero(seg_mask))
+            
             # inpaint
             img_inpainted = cv.inpaint(img2, mask2, 3, cv.INPAINT_TELEA) #INPAINT_TELEA
 
