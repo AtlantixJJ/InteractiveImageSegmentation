@@ -1,1 +1,2 @@
-# InteractiveImageSegmentation
+# Interactive Image Segmentation
+
