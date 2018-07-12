@@ -23,7 +23,8 @@ Key 's' - To save the results
 
 # Python 2/3 compatibility
 from __future__ import print_function
-
+from ns import api
+import threading, time
 import numpy as np
 import cv2 as cv
 import sys
@@ -54,14 +55,36 @@ thickness = 3           # brush thickness
 
 drag_st = []
 
-seg_img, seg_mask = 0, 0
+seg_img, seg_mask = np.zeros((10, 10, 3)), np.zeros((10, 10, 3))
+
+need_stylization = False
+
+bbox = [0, 0, 1, 1]
+
+class StylizationThread(threading.Thread):
+    def __init__(self, model_file="models/feathers.ckpt-done"):
+        threading.Thread.__init__(self)
+
+        self.stylized_image = np.zeros((10, 10, 3))
+        self.content_image = np.zeros((10, 10, 3))
+        self.stylizer = api.NeuralStyle(model_file)
+
+        self.need_stylization = False
+
+    def run(self):
+        while True:
+            if self.need_stylization:
+                self.need_stylization = False
+                self.stylized_image = self.stylizer.stylize_single(self.content_image)[:, :, ::-1]
+            if not self.need_stylization:
+                time.sleep(0.1)
 
 def onmouse(event,x,y,flags,param):
     global img,img2,drawing,value,mask,rectangle,rect,rect_or_mask,ix,iy,rect_over
 
     global resume_dragging, dragging, has_result, drag_st, prev_img
 
-    global img_inpainted
+    global img_inpainted, need_stylization, thr
 
     # Draw Rectangle
     if event == cv.EVENT_RBUTTONDOWN:
@@ -92,7 +115,7 @@ def onmouse(event,x,y,flags,param):
     if event == cv.EVENT_LBUTTONDOWN:
         if rect_over == False:
             print("first draw rectangle \n")
-        elif drag_over:
+        elif drag_over or not dragging:
             drawing = True
             cv.circle(img,(x,y),thickness,value['color'],-1)
             cv.circle(mask,(x,y),thickness,value['val'],-1)
@@ -112,10 +135,9 @@ def onmouse(event,x,y,flags,param):
             cv.circle(img,(x,y),thickness,value['color'],-1)
             cv.circle(mask,(x,y),thickness,value['val'],-1)
         
-        if dragging == True and not resume_dragging:
+        if dragging and not resume_dragging:
             #prev_img = (255 - img_inpainted) * (255 - seg_mask[:, :, None].astype(img_inpainted.dtype))
             img = prev_img.copy()
-            print()
             if delta[0] > 0 and delta[1] > 0:
                 img[delta[0]:, delta[1]:] = (256 - prev_img[delta[0]:, delta[1]:]) * (255 - seg_mask[:-delta[0], :-delta[1], None]) + (256 - seg_img[:-delta[0], :-delta[1]]) * seg_mask[:-delta[0], :-delta[1], None]
             elif delta[0] < 0 and delta[1] > 0:
@@ -124,6 +146,9 @@ def onmouse(event,x,y,flags,param):
                 img[delta[0]:, :delta[1]] = (256 - prev_img[delta[0]:, :delta[1]]) * (255 - seg_mask[:-delta[0], -delta[1]:, None])+ (256 - seg_img[:-delta[0], -delta[1]:]) * seg_mask[:-delta[0], -delta[1]:, None]
             elif delta[0] < 0 and delta[1] < 0:
                 img[:delta[0], :delta[1]] = (256 - prev_img[:delta[0], :delta[1]]) * (255 - seg_mask[-delta[0]:, -delta[1]:, None])+ (256 - seg_img[-delta[0]:, -delta[1]:]) * seg_mask[-delta[0]:, -delta[1]:, None]
+            
+            thr.content_image = img
+            thr.need_stylization = True
 
 
     elif event == cv.EVENT_LBUTTONUP:
@@ -141,6 +166,9 @@ if __name__ == '__main__':
     # print documentation
     print(__doc__)
 
+    # stylization
+    thr = StylizationThread()
+
     # Loading images
     if len(sys.argv) == 2:
         filename = sys.argv[1] # for drawing purposes
@@ -155,7 +183,8 @@ if __name__ == '__main__':
     output = np.zeros(img.shape,np.uint8)           # output image to be shown
 
     # input and output windows
-    cv.namedWindow('output')
+    cv.namedWindow('segmentation')
+    cv.namedWindow('stylization')
     cv.namedWindow('input')
     cv.setMouseCallback('input',onmouse)
     cv.moveWindow('input',img.shape[1]+10,90)
@@ -163,9 +192,14 @@ if __name__ == '__main__':
     print(" Instructions: \n")
     print(" Draw a rectangle around the object using right mouse button \n")
 
+    thr.content_image = img2
+    thr.need_stylization = True
+    thr.start()
+
     while True:
-        cv.imshow('output',output)
-        cv.imshow('input',img)
+        cv.imshow('segmentation', seg_img[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :])
+        cv.imshow('input', img)
+        cv.imshow('stylization', thr.stylized_image)
         k = cv.waitKey(1)
 
         # key bindings
@@ -202,6 +236,7 @@ if __name__ == '__main__':
             print("resetting \n")
             rect = (0,0,1,1)
             drawing = False
+            dragging = False
             resume_dragging = False
             drag_over = False
             rectangle = False
