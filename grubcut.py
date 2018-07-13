@@ -167,15 +167,10 @@ if __name__ == '__main__':
     print(__doc__)
 
     # stylization
-    thr = StylizationThread()
+    thr = StylizationThread(sys.argv[2])
 
     # Loading images
-    if len(sys.argv) == 2:
-        filename = sys.argv[1] # for drawing purposes
-    else:
-        print("No input image given, so loading default image, ../data/lena.jpg \n")
-        print("Correct Usage: python grabcut.py <filename> \n")
-        filename = '../data/lena.jpg'
+    filename = sys.argv[1] # for drawing purposes
 
     img = cv.imread(filename)
     img2 = img.copy()                               # a copy of original image

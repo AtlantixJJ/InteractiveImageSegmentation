@@ -1,0 +1,16 @@
+{
+    "display_size": 256,
+    "gpu": "3",
+    "userdata_dir": "userdata",
+    "models": {
+        "动漫人脸": {
+            "model_name": "goodmodel_dragan_anime1",
+            "sery": "",
+            "field_name": "GGAnimeFace",
+            "input_dim": 3,
+            "batch_before": true,
+            "model_dir": "/home/atlantix/NIM/success/",
+            "cgan": true
+        }
+    }
+}
