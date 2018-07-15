@@ -6,7 +6,6 @@ from django.template import loader, Context
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import home.api as api
-
 from io import BytesIO
 from PIL import Image
 from base64 import b64encode, b64decode
@@ -14,16 +13,13 @@ from base64 import b64encode, b64decode
 index_temp = loader.get_template("index.html")
 
 
-def response(image, z, c):
+def response(image):
     buffered = BytesIO()
     image.save(buffered, format="PNG")
     imageString = b64encode(buffered.getvalue())
-    z = b64encode(z)
-    c = b64encode(c)
-    json = '{"ok":"true","img":"data:image/png;base64,%s","z":"%s","c":"%s"}' % (
-        imageString, z, c)
+    json = '{"ok":"true", "img_h":%d, "img_w":%d, "img":"data:image/png;base64,%s"}' % (
+        image.size[0], image.size[1], imageString)
     return HttpResponse(json)
-
 
 def index(request):
     return render(request, 'index.html')
@@ -60,11 +56,8 @@ def srand(request):
     if request.method == 'POST' and form_data.has_key('model'):
         try:
             model = form_data['model']
-            if not api.model_exist(model):
-                return HttpResponse('{}')
-
-            gen, z, c = api.regenerate_image(model)
-            return response(gen, z, c)
+            image = Image.open("home/static/img/shenyang.jpg")
+            return response(image)
         except Exception as e:
             print(e)
             return HttpResponse('{}')

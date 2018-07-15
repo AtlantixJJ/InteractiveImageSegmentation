@@ -164,8 +164,6 @@
 }
 
 .image {
-  height: 256px;
-  width: 256px;
   /* border: solid 1px #000; */
   vertical-align: inherit;
   margin: 50px auto;

@@ -7,7 +7,9 @@ var currentModel = 0;
 var loading = false;
 var image = null,
     z = null,
-    c = null;
+    c = null,
+    img_h = null,
+    img_w = null;
 
 var spinner = new Spinner({ color: '#999' });
 
@@ -122,9 +124,13 @@ function setImage(data) {
     $('#option-buttons').prop('hidden', false);
   }
   image = data.img;
-  z = data.z;
-  c = data.c;
+  img_w = data.img_h;
+  img_h = data.img_w;
   $('#image').attr('src', image);
+  $('#image').attr('height', img_h);
+  $('#image').attr('width', img_w);
+  $('#canvas').attr('height', img_h);
+  $('#canvas').attr('width', img_w);
   $('#canvas').css('background-image', 'url(' + image + ')');
   spinner.spin();
 }
