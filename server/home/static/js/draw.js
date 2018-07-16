@@ -176,6 +176,8 @@ function setImage(data) {
   if (fused_image) {
     $('#image').attr('src', fused_image);
     $('#canvas').css('background-image', 'url(' + fused_image + ')');
+    drag_img = new Image();
+    drag_img.src = data.seg_img;
   } else {
     $('#image').attr('src', image);
     $('#canvas').css('background-image', 'url(' + image + ')');
@@ -319,9 +321,6 @@ $(document).ready(function () {
   canvas.addEventListener('touchend', onMouseUp, false);
   canvas.addEventListener('touchmove', onMouseMove, false);
   canvas.addEventListener('touchcancel', onMouseUp, false);
-
-  drag_img = new Image();
-  drag_img.src = "static/img/f.png";
 
   $('#download-sketch').click(function () {
     download(canvas.toDataURL('image/png'), 'sketch_' + new Date().format('yyyyMMdd_hhmmss') + '.png');

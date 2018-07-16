@@ -23,7 +23,7 @@ def response(image):
         image.size[0], image.size[1], imageString)
     return HttpResponse(json)
 
-def response2(image, mask):
+def response2(image, mask, seg_img):
     buffered = BytesIO()
     image.save(buffered, format="PNG")
     imageString = b64encode(buffered.getvalue())
@@ -33,13 +33,20 @@ def response2(image, mask):
     maskString = b64encode(maskBuffered.getvalue())
 
     fused_image = Image.composite(image.point(lambda x:x*1.5), image.point(lambda x:x/2), mask)
-    fused_image.save(open("fused.png", 'wb'))
     fusedBuffered = BytesIO()
     fused_image.save(fusedBuffered, format="PNG")
     fusedString = b64encode(fusedBuffered.getvalue())
 
-    json = '{"ok":"true", "img_h":"%d", "img_w":"%d", "raw_img":"data:image/png;base64,%s", "mask":"data:image/png;base64,%s", "fused_image":"data:image/png;base64,%s"}' % (
-        image.size[0], image.size[1], imageString, maskString, fusedString)
+    segimgBuffer = BytesIO()
+    seg_img.save(segimgBuffer, format="PNG")
+    segimgString = b64encode(segimgBuffer.getvalue())
+
+    json = '{"ok":"true", "img_h":"%d", "img_w":"%d", \
+        "raw_img":"data:image/png;base64,%s", \
+            "mask":"data:image/png;base64,%s", \
+            "fused_image":"data:image/png;base64,%s", \
+            "seg_img":"data:image/png;base64,%s"}' % (
+        image.size[0], image.size[1], imageString, maskString, fusedString, segimgString)
 
     return HttpResponse(json)
 
@@ -70,7 +77,7 @@ def input_image(request):
             [seg_img, seg_mask, bbox] = api.get_segmentation(image_np, rect)
             #gen, z, c = api.generate_image(model, sketch, mask, z, c)
 
-            return response2(image, seg_mask)
+            return response2(image, seg_mask, seg_img)
         except Exception as e:
             print(e)
             return HttpResponse('{}')

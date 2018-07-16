@@ -27,8 +27,7 @@ class InteractiveSegmentation(object):
 
     def segment_rect(self, rect):
         self.setup_vars()
-
-        cv.imwrite("rect.png", self.image[rect[0]:rect[0]+rect[2], rect[1]:rect[1]+rect[3]])
+        
         cv.grabCut(self.image, self.raw_mask, tuple(rect), self.bgdmodel,self.fgdmodel,1,cv.GC_INIT_WITH_RECT)
         mask2 = np.where((self.raw_mask==1) + (self.raw_mask==3), 255, 0).astype('uint8')
         output = cv.bitwise_and(self.image,self.image,mask=mask2)
@@ -48,7 +47,7 @@ stylizor = NeuralStyle("../models/feathers.ckpt-done")
 def get_segmentation(image, rect):
     segmentor.set_image(image)
     img, mask, bbox = segmentor.segment_rect(rect)
-    return fromarray(img), fromarray(mask), bbox
+    return fromarray(img[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]), fromarray(mask), bbox
 
 def get_stylization(image):
     return fromarray(stylizor.stylize_single(image))
