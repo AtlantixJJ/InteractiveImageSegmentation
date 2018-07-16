@@ -68,9 +68,13 @@
 
       <div class="row canvas-background my-4">
         <div id="spin"></div>
-        <img id="image" src="" class="image" hidden/>
-        <canvas id="canvas" class="image">
+        
+        <div class="image" style="position: relative;" ondragstart="return false;">
+        <img id="image" src="" hidden/>
+        <canvas id="canvas" class="image" >
+        <!--<img id="image-fore" src="{% static 'img/f.png' %}" height="100" width="80"/>-->
         </canvas>
+        </div>
         <button id="start" type="button" class="btn btn-outline-success btn-sm">
           开始 ▶︎
         </button>

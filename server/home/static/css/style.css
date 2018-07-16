@@ -164,9 +164,25 @@
 }
 
 .image {
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  user-select:none;
   /* border: solid 1px #000; */
   vertical-align: inherit;
-  margin: 50px auto;
+}
+#image{
+  border: solid 3px blue;
+}
+#image-fore {
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  border: solid 1px #000;
+  top: 0;
+  left: 0;
+  height: 100px;
+  width: 70px;
+  position: absolute;
+  z-index: 999;
 }
 #canvas {
   background-size: contain;
@@ -182,6 +198,7 @@
   margin-top: -20px;
 }
 .canvas-background {
+  padding: 50px;
   position: relative;
   background-color: rgb(255, 242, 225);
   border-radius: 10px;

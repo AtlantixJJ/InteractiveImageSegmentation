@@ -9,7 +9,7 @@ function Graph(document) {
   var offsetX = canvas.offsetLeft + parseInt(canvas.style.borderBottomWidth);
   var offsetY = canvas.offsetTop + parseInt(canvas.style.borderBottomWidth);
 
-  var has_result = false;
+  this.has_result = false;
 
   ctx.fillStyle = '#000';
   ctx.lineCap = 'round';
@@ -37,6 +37,10 @@ function Graph(document) {
     if (x2 < x1) [x1, x2] = [x2, x1];
     if (y2 < y1) [y1, y2] = [y2, y1];
     ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+  };
+  
+  this.drawImage = function (img, x, y) {
+    ctx.drawImage(img, x, y);
   };
 
   this.clear = function () {

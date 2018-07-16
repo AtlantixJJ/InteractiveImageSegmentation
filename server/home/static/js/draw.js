@@ -11,9 +11,17 @@ var image = null,
     img_h = null,
     img_w = null;
 
+var drag_img = null,
+    dragging = false,
+    drag_over = false,
+    resume_dragging = false;
+
 var rect_st = {},
     rect_ed = {},
     drawing_rect = false;
+
+var mask = null,
+    fused_image;
 
 var spinner = new Spinner({ color: '#999' });
 
@@ -93,15 +101,18 @@ function onMouseDown(event) {
     if (!graph.has_result) {
       drawing_rect = true;
       rect_st = mouseOld;
+    } else {
+      dragging = true;
     }
   }
 }
 
 function onMouseUp(event) {
+  var mouse = getMouse(event);
+  if (drawing_rect)
+    rect_ed = mouse;
   mouseDown = false;
   drawing_rect = false;
-  var mouse = getMouse(event);
-  rect_ed = mouse;
 }
 
 function onMouseMove(event) {
@@ -114,6 +125,16 @@ function onMouseMove(event) {
     }
     if (drawing_rect) {
       drawRect(rect_st.x, rect_st.y, mouse.x, mouse.y);
+    }
+
+    if (dragging) {
+      /*
+      $('#image-fore').css({
+        'top':`${mouse.y}px`,
+        'left':`${mouse.x}px`});
+      */
+      graph.clear();
+      graph.drawImage(drag_img, mouse.x - drag_img.width / 2, mouse.y - drag_img.height / 2);
     }
     //drawShape(mouseOld.x, mouseOld.y, mouse.x, mouse.y);
     mouseOld = mouse;
@@ -139,6 +160,7 @@ function setModel(model) {
 }
 
 function setImage(data) {
+  console.log("in");
   setLoading(false);
   if (!data || !data.ok) return;
 
@@ -146,13 +168,24 @@ function setImage(data) {
     $('#stroke').removeClass('disabled');
     $('#option-buttons').prop('hidden', false);
   }
-  image = data.img;
+  image = data.raw_img;
+  fused_image = data.fused_image;
+  mask = data.mask;
   img_w = data.img_h;
   img_h = data.img_w;
-  $('#image').attr('src', image);
+  if (fused_image) {
+    $('#image').attr('src', fused_image);
+    $('#canvas').css('background-image', 'url(' + fused_image + ')');
+  } else {
+    $('#image').attr('src', image);
+    $('#canvas').css('background-image', 'url(' + image + ')');
+  }
+
+  console.log(fused_image);
+
   $('#image').attr('height', img_h);
   $('#image').attr('width', img_w);
-  $('#canvas').css('background-image', 'url(' + image + ')');
+
   $('#canvas').attr('height', img_h);
   $('#canvas').attr('width', img_w);
   spinner.spin();
@@ -182,11 +215,14 @@ function onSubmit() {
     setLoading(true);
     var formData = {
       model: MODEL_NAMES[currentModel],
-      sketch: graph.getImageData()
-      //rect: [rect_st.x, rect_st.y, rect_ed.x, rect_ed.y]
+      sketch: graph.getImageData(),
+      image: image,
+      rect: [rect_st.x, rect_st.y, rect_ed.x, rect_ed.y]
     };
     $.post('input', formData, setImage, 'json');
     graph.has_result = true;
+    dragging = false;
+    resume_dragging = true;
   }
 }
 
@@ -283,6 +319,9 @@ $(document).ready(function () {
   canvas.addEventListener('touchend', onMouseUp, false);
   canvas.addEventListener('touchmove', onMouseMove, false);
   canvas.addEventListener('touchcancel', onMouseUp, false);
+
+  drag_img = new Image();
+  drag_img.src = "static/img/f.png";
 
   $('#download-sketch').click(function () {
     download(canvas.toDataURL('image/png'), 'sketch_' + new Date().format('yyyyMMdd_hhmmss') + '.png');
