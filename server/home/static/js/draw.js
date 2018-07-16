@@ -11,6 +11,10 @@ var image = null,
     img_h = null,
     img_w = null;
 
+var rect_st = {},
+    rect_ed = {},
+    drawing_rect = false;
+
 var spinner = new Spinner({ color: '#999' });
 
 var COLORS = [
@@ -29,7 +33,7 @@ var COLORS = [
 ];
 
 var MODEL_NAMES = [
-  '动漫人脸',
+  '编辑',
   //'人脸草图',
   //'半身草图',
 ]
@@ -52,10 +56,17 @@ Date.prototype.format = function (format) {
 
 var MAX_LINE_WIDTH = 10;
 
-function drawShape(x1, y1, x2, y2) {
+function drawRect(x1, y1, x2, y2) {
+  if (!image) return;
+  graph.clear();
+  graph.drawRect(x1, y1, x2, y2);
+}
+
+function drawPath(x1, y1, x2, y2) {
   if (!image) return;
   graph.drawLine(x1, y1, x2, y2);
 }
+
 
 function getMouse(event) {
   var rect = event.target.getBoundingClientRect();
@@ -77,11 +88,20 @@ function onMouseDown(event) {
     return;
   }
   mouseOld = getMouse(event);
-  if (mouseOld != null) mouseDown = true;
+  if (mouseOld != null) {
+    mouseDown = true;
+    if (!graph.has_result) {
+      drawing_rect = true;
+      rect_st = mouseOld;
+    }
+  }
 }
 
 function onMouseUp(event) {
   mouseDown = false;
+  drawing_rect = false;
+  var mouse = getMouse(event);
+  rect_ed = mouse;
 }
 
 function onMouseMove(event) {
@@ -92,7 +112,10 @@ function onMouseMove(event) {
       mouseDown = false;
       return;
     }
-    drawShape(mouseOld.x, mouseOld.y, mouse.x, mouse.y);
+    if (drawing_rect) {
+      drawRect(rect_st.x, rect_st.y, mouse.x, mouse.y);
+    }
+    //drawShape(mouseOld.x, mouseOld.y, mouse.x, mouse.y);
     mouseOld = mouse;
   }
 }
@@ -129,9 +152,9 @@ function setImage(data) {
   $('#image').attr('src', image);
   $('#image').attr('height', img_h);
   $('#image').attr('width', img_w);
+  $('#canvas').css('background-image', 'url(' + image + ')');
   $('#canvas').attr('height', img_h);
   $('#canvas').attr('width', img_w);
-  $('#canvas').css('background-image', 'url(' + image + ')');
   spinner.spin();
 }
 
@@ -151,6 +174,7 @@ function setLoading(isLoading) {
 
 function onClear() {
   graph.clear();
+  graph.has_result = false;
 }
 
 function onSubmit() {
@@ -158,11 +182,11 @@ function onSubmit() {
     setLoading(true);
     var formData = {
       model: MODEL_NAMES[currentModel],
-      sketch: graph.getImageData(),
-      z: z,
-      c: c
+      sketch: graph.getImageData()
+      //rect: [rect_st.x, rect_st.y, rect_ed.x, rect_ed.y]
     };
     $.post('input', formData, setImage, 'json');
+    graph.has_result = true;
   }
 }
 
