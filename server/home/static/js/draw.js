@@ -20,12 +20,14 @@ var rect_st = {},
     drawing_rect = false;
 
 var mask              = null,
+    seg_st            = {},
     inp_image         = null,
     inp_style_image   = null,
     fused_image       = null,
     seg_img           = null,
     seg_style_img     = null;
-    
+
+var canvas_img        = null;
 
 var spinner = new Spinner({ color: '#999' });
 
@@ -133,11 +135,10 @@ function onMouseMove(event) {
     }
 
     if (dragging) {
-      /*
-      $('#image-fore').css({
-        'top':`${mouse.y}px`,
-        'left':`${mouse.x}px`});
-      */
+      if (canvas_img != "inp_style_image") {
+        canvas_img = "inp_style_image";
+        $('#canvas').css('background-image', 'url(' + inp_style_image + ')');
+      }
       graph.clear();
       graph.drawImage(drag_img, mouse.x - drag_img.width / 2, mouse.y - drag_img.height / 2);
     }
@@ -180,6 +181,7 @@ function setImageInit(data) {
   if (style_image) {
     $('#image').attr('src', style_image);
     $('#canvas').css('background-image', 'url(' + style_image + ')');
+    canvas_img = 'style_image';
   }
 
   $('#image').attr('height', img_h);
@@ -211,11 +213,15 @@ function setImage(data) {
   if (fused_image) {
     $('#image').attr('src', fused_image);
     $('#canvas').css('background-image', 'url(' + fused_image + ')');
+    canvas_img = 'fused_image';
   }
 
   if (seg_style_img) {
     drag_img = new Image();
     drag_img.src = seg_style_img;
+    seg_st.x = data.st_x;
+    seg_st.y = data.st_y;
+    graph.drawImage(drag_img, seg_st.x, seg_st.y);
   }
 
   $('#image').attr('height', img_h);

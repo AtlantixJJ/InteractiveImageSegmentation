@@ -60,7 +60,10 @@ def get_segmentation(image, rect):
     seg_img, inp_img, mask, bbox = segmentor.segment_rect(rect)
     if bbox is not None:
         seg_img = seg_img[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
-    return fromarray(seg_img), fromarray(inp_img), fromarray(mask), bbox
+        seg_img = fromarray(seg_img)
+        seg_img.putalpha(fromarray(mask[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2]]))
+
+    return seg_img, fromarray(inp_img), fromarray(mask), bbox
 
 def get_stylization(image):
     return fromarray(stylizor.stylize_single(image))

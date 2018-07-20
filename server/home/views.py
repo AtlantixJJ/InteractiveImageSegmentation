@@ -42,7 +42,7 @@ def response_srand(image, style_image):
         image.size[0], image.size[1], imageString, styleString)
     return HttpResponse(json)
 
-def response_submit(image, inp_image, inp_style_image, mask, seg_img, seg_style_img):
+def response_submit(image, inp_image, inp_style_image, mask, seg_img, seg_style_img, rect):
     imageString = get_png_str(image)
     imageInpaintString = get_png_str(inp_image)
     imageInpStylizedString = get_png_str(inp_style_image)
@@ -54,6 +54,7 @@ def response_submit(image, inp_image, inp_style_image, mask, seg_img, seg_style_
     segstyleString = get_png_str(seg_style_img)
 
     json = '{"ok":"true", "img_h":"%d", "img_w":"%d", \
+            "st_x": "%d", "st_y": "%d", \
             "raw_img":"data:image/png;base64,%s", \
             "inp_img":"data:image/png;base64,%s",\
             "inp_style":"data:image/png;base64,%s",\
@@ -62,6 +63,7 @@ def response_submit(image, inp_image, inp_style_image, mask, seg_img, seg_style_
             "seg_img":"data:image/png;base64,%s", \
             "seg_style_img":"data:image/png;base64,%s"}' % (
         image.size[0], image.size[1],
+        rect[0], rect[1],
         imageString, imageInpaintString, imageInpStylizedString,
         maskString, fusedString,
         segimgString, segstyleString)
@@ -95,11 +97,16 @@ def input_image(request):
             inp_style_img = api.get_stylization(inp_img)
             if bbox is not None:
                 #img_np_ = np.asarray(inp_style_img, dtype="uint8")[:, :, :3]
-                img_np_ = style_image_np[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
+                n1 = style_image_np[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
+                n2 = np.asarray(seg_img, dtype="uint8")[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], 3]
+                print(n1.shape, n2.shape)
+                img_np_ = np.concatenate([n1, n2], axis=2)
                 seg_style_img = Image.fromarray(img_np_)
             else:
                 seg_style_img = inp_style_img
-            return response_submit(image, inp_img, inp_style_img, seg_mask, seg_img, seg_style_img)
+            return response_submit(image, inp_img, inp_style_img,
+                                seg_mask, seg_img, seg_style_img,
+                                bbox)
         except Exception as e:
             print(e)
             return HttpResponse('{}')
