@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.shortcuts import render
+from os.path import join as osj
 from django.template import loader, Context
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -14,39 +15,56 @@ from base64 import b64encode, b64decode
 
 index_temp = loader.get_template("index.html")
 
+WINDOWS = True
+
+def get_png_str(image):
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    imageString = b64encode(buffered.getvalue())
+    if WINDOWS:
+        return str(imageString)[2:-1]
+    else:
+        return str(imageString)
 
 def response(image):
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    imageString = b64encode(buffered.getvalue())
-    json = '{"ok":"true", "img_h":"%d", "img_w":"%d", "raw_img":"data:image/png;base64,%s"}' % (
-        image.size[0], image.size[1], imageString)
+    s = get_png_str(image)
+    json = '{"ok":"true", "img_h":"%d", "img_w":"%d", \
+            "raw_img":"data:image/png;base64,%s"}' % (
+        image.size[0], image.size[1], s)
     return HttpResponse(json)
 
-def response2(image, mask, seg_img):
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    imageString = b64encode(buffered.getvalue())
+def response_srand(image, style_image):
+    imageString = get_png_str(image)
+    styleString = get_png_str(style_image)
+    json = '{"ok":"true", "img_h":"%d", "img_w":"%d", \
+            "raw_img":"data:image/png;base64,%s",\
+            "style_img":"data:image/png;base64,%s"}' % (
+        image.size[0], image.size[1], imageString, styleString)
+    return HttpResponse(json)
 
-    maskBuffered = BytesIO()
-    mask.save(maskBuffered, format="PNG")
-    maskString = b64encode(maskBuffered.getvalue())
-
-    fused_image = Image.composite(image.point(lambda x:x*1.5), image.point(lambda x:x/2), mask)
-    fusedBuffered = BytesIO()
-    fused_image.save(fusedBuffered, format="PNG")
-    fusedString = b64encode(fusedBuffered.getvalue())
-
-    segimgBuffer = BytesIO()
-    seg_img.save(segimgBuffer, format="PNG")
-    segimgString = b64encode(segimgBuffer.getvalue())
+def response_submit(image, inp_image, inp_style_image, mask, seg_img, seg_style_img):
+    imageString = get_png_str(image)
+    imageInpaintString = get_png_str(inp_image)
+    imageInpStylizedString = get_png_str(inp_style_image)
+    maskString = get_png_str(mask)
+    #fused_image = Image.composite(image.point(lambda x:x*1.5), image.point(lambda x:x/2), mask)
+    fused_image = Image.composite(inp_style_image.point(lambda x:x*1.5), inp_style_image.point(lambda x:x/2), mask)
+    fusedString = get_png_str(fused_image)
+    segimgString = get_png_str(seg_img)
+    segstyleString = get_png_str(seg_style_img)
 
     json = '{"ok":"true", "img_h":"%d", "img_w":"%d", \
-        "raw_img":"data:image/png;base64,%s", \
+            "raw_img":"data:image/png;base64,%s", \
+            "inp_img":"data:image/png;base64,%s",\
+            "inp_style":"data:image/png;base64,%s",\
             "mask":"data:image/png;base64,%s", \
             "fused_image":"data:image/png;base64,%s", \
-            "seg_img":"data:image/png;base64,%s"}' % (
-        image.size[0], image.size[1], imageString, maskString, fusedString, segimgString)
+            "seg_img":"data:image/png;base64,%s", \
+            "seg_style_img":"data:image/png;base64,%s"}' % (
+        image.size[0], image.size[1],
+        imageString, imageInpaintString, imageInpStylizedString,
+        maskString, fusedString,
+        segimgString, segstyleString)
 
     return HttpResponse(json)
 
@@ -58,26 +76,30 @@ def index(request):
 @csrf_exempt
 def input_image(request):
     form_data = request.POST
-    if request.method == 'POST' and form_data.has_key('sketch') and form_data.has_key('model'):
+    if request.method == 'POST':
         try:
-            model = form_data['model']
-
             #imageData = b64decode(form_data['sketch'].split(',')[1])
             imageData =  b64decode(form_data['image'].split(',')[1])
+            styleImageData = b64decode(form_data['style_image'].split(',')[1])
             rc = form_data.getlist('rect[]')
             rc = [int(float(item)) for item in rc]
             rect = [min(rc[0], rc[2]), min(rc[1], rc[3]), abs(rc[0] - rc[2]), abs(rc[1] - rc[3])]
-            
-            #z = b64decode(form_data['z'])
-            #c = b64decode(form_data['c'])
 
             image = Image.open(BytesIO(imageData))
             image_np = np.asarray(image, dtype="uint8")[:, :, :3]
+            style_image = Image.open(BytesIO(styleImageData))
+            style_image_np = np.asarray(style_image, dtype="uint8")[:, :, :3]
 
-            [seg_img, seg_mask, bbox] = api.get_segmentation(image_np, rect)
-            #gen, z, c = api.generate_image(model, sketch, mask, z, c)
-
-            return response2(image, seg_mask, seg_img)
+            # segment image; inpainted image; segmentation mask; bounding box
+            [seg_img, inp_img, seg_mask, bbox] = api.get_segmentation(image_np, rect)
+            inp_style_img = api.get_stylization(inp_img)
+            if bbox is not None:
+                #img_np_ = np.asarray(inp_style_img, dtype="uint8")[:, :, :3]
+                img_np_ = style_image_np[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
+                seg_style_img = Image.fromarray(img_np_)
+            else:
+                seg_style_img = inp_style_img
+            return response_submit(image, inp_img, inp_style_img, seg_mask, seg_img, seg_style_img)
         except Exception as e:
             print(e)
             return HttpResponse('{}')
@@ -87,12 +109,14 @@ def input_image(request):
 @csrf_exempt
 def srand(request):
     form_data = request.POST
-    if request.method == 'POST' and form_data.has_key('model'):
+    print(form_data)
+    if request.method == 'POST':
         try:
-            model = form_data['model']
-            image = Image.open("home/static/img/shenyang3.jpg")
-            #image = api.get_stylization(image)
-            return response(image)
+            image = Image.open(osj("home", "static", "img", "shenyang3.jpg"))
+            shape = (image.size[0] // 4 * 4, image.size[1] // 4  * 4)
+            image = image.resize(shape)
+            style_image = api.get_stylization(image)
+            return response_srand(image, style_image)
         except Exception as e:
             print(e)
             return HttpResponse('{}')

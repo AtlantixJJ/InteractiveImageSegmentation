@@ -5,9 +5,8 @@ var mouseOld = {};
 var mouseDown = false;
 var currentModel = 0;
 var loading = false;
-var image = null,
-    z = null,
-    c = null,
+var raw_image = null,
+    style_image = null,
     img_h = null,
     img_w = null;
 
@@ -20,8 +19,13 @@ var rect_st = {},
     rect_ed = {},
     drawing_rect = false;
 
-var mask = null,
-    fused_image;
+var mask              = null,
+    inp_image         = null,
+    inp_style_image   = null,
+    fused_image       = null,
+    seg_img           = null,
+    seg_style_img     = null;
+    
 
 var spinner = new Spinner({ color: '#999' });
 
@@ -41,7 +45,7 @@ var COLORS = [
 ];
 
 var MODEL_NAMES = [
-  '编辑',
+  'AI Painting',
   //'人脸草图',
   //'半身草图',
 ]
@@ -123,6 +127,7 @@ function onMouseMove(event) {
       mouseDown = false;
       return;
     }
+
     if (drawing_rect) {
       drawRect(rect_st.x, rect_st.y, mouse.x, mouse.y);
     }
@@ -159,31 +164,59 @@ function setModel(model) {
   onStart();
 }
 
-function setImage(data) {
-  console.log("in");
+function setImageInit(data) {
   setLoading(false);
   if (!data || !data.ok) return;
 
-  if (!image) {
+  if (!style_image) {
     $('#stroke').removeClass('disabled');
     $('#option-buttons').prop('hidden', false);
   }
-  image = data.raw_img;
-  fused_image = data.fused_image;
-  mask = data.mask;
+  raw_image     = data.raw_img;
+  style_image   = data.style_img;
   img_w = data.img_h;
   img_h = data.img_w;
+
+  if (style_image) {
+    $('#image').attr('src', style_image);
+    $('#canvas').css('background-image', 'url(' + style_image + ')');
+  }
+
+  $('#image').attr('height', img_h);
+  $('#image').attr('width', img_w);
+
+  $('#canvas').attr('height', img_h);
+  $('#canvas').attr('width', img_w);
+  spinner.spin();
+}
+
+function setImage(data) {
+  setLoading(false);
+  if (!data || !data.ok) return;
+
+  if (!style_image) {
+    $('#stroke').removeClass('disabled');
+    $('#option-buttons').prop('hidden', false);
+  }
+  raw_image       = data.raw_img;
+  inp_image       = data.inp_img;
+  inp_style_image = data.inp_style;
+  fused_image     = data.fused_image;
+  mask = data.mask;
+  seg_img = data.seg_img;
+  seg_style_img = data.seg_style_img;
+  img_w = data.img_h;
+  img_h = data.img_w;
+
   if (fused_image) {
     $('#image').attr('src', fused_image);
     $('#canvas').css('background-image', 'url(' + fused_image + ')');
-    drag_img = new Image();
-    drag_img.src = data.seg_img;
-  } else {
-    $('#image').attr('src', image);
-    $('#canvas').css('background-image', 'url(' + image + ')');
   }
 
-  console.log(fused_image);
+  if (seg_style_img) {
+    drag_img = new Image();
+    drag_img.src = seg_style_img;
+  }
 
   $('#image').attr('height', img_h);
   $('#image').attr('width', img_w);
@@ -209,6 +242,8 @@ function setLoading(isLoading) {
 
 function onClear() {
   graph.clear();
+  dragging = false;
+  drawing_rect = false;
   graph.has_result = false;
 }
 
@@ -218,7 +253,8 @@ function onSubmit() {
     var formData = {
       model: MODEL_NAMES[currentModel],
       sketch: graph.getImageData(),
-      image: image,
+      image: raw_image,
+      style_image: style_image,
       rect: [rect_st.x, rect_st.y, rect_ed.x, rect_ed.y]
     };
     $.post('input', formData, setImage, 'json');
@@ -232,7 +268,7 @@ function onSrand() {
   if (loading) return;
   setLoading(true);
   onClear();
-  $.post('srand', { model: MODEL_NAMES[currentModel] }, setImage, 'json');
+  $.post('srand', { model: MODEL_NAMES[currentModel] }, setImageInit, 'json');
 }
 
 function onStart() {
@@ -326,7 +362,8 @@ $(document).ready(function () {
     download(canvas.toDataURL('image/png'), 'sketch_' + new Date().format('yyyyMMdd_hhmmss') + '.png');
   });
   $('#download-image').click(function () {
-    download(image, 'image_' + new Date().format('yyyyMMdd_hhmmss') + '.png');
+    //[TODO]: download fused image
+    download(style_image, 'image_' + new Date().format('yyyyMMdd_hhmmss') + '.png');
   });
   $('#clear').click(onClear);
   $('#submit').click(onSubmit);

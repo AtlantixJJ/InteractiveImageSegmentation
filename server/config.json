@@ -3,7 +3,7 @@
     "gpu": "3",
     "userdata_dir": "userdata",
     "models": {
-        "动漫人脸": {
+        "AI Painting": {
             "model_name": "goodmodel_dragan_anime1",
             "sery": "",
             "field_name": "GGAnimeFace",

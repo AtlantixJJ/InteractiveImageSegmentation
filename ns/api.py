@@ -1,5 +1,7 @@
 # coding: utf-8
 from __future__ import print_function
+import sys
+sys.path.insert(0, "../ns")
 import tensorflow as tf
 from preprocessing.vgg_preprocessing import normal_process
 import model
