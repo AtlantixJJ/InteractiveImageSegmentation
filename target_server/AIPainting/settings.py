@@ -25,7 +25,7 @@ SECRET_KEY = '442ht^45=!=$b@dio4s!u$vvp$0a4#dzo5dfjhb*dlpc7)3i$n'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -123,5 +123,5 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    '/home/lljbash/glamorous/web/AIPainting/static',
+    '/mnt/share/ky/Aesthetic-Painting/web/AIPainting/static',
 )

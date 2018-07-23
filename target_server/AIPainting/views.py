@@ -20,6 +20,8 @@ import random
 #lualib = ctypes.CDLL("/home/lljbash/torch/install/lib/libluajit.so", mode=ctypes.RTLD_GLOBAL)
 #import app
 
+reqid=0
+
 def homepage(request):
     #myapp = app.GlamorousApp()
     #myapp.initialize('/home/lljbash/data')
@@ -30,17 +32,20 @@ def homepage(request):
     if(content == None):
         return render_to_response("AIPainting.html")
     else:
-        
+        global reqid
+        (id,reqid)=(reqid+1,reqid+1)
+				
         content = str(content)
         style = int(str(style))
         print(content, style, adj)
         
         portno = random.randint(23000, 23111)
         
-        def call_server():
-            os.system('./server %d /home/lljbash/data' % portno)
+        os.system('./testapp %s %d %s %s' % (content,style,adj,'req_'+str(id)))
+        '''def call_server():
+            os.system('./server %d /mnt/share/ky/image_data' % portno)
         thread.start_new_thread(call_server, ())
-        time.sleep(1)
+        time.sleep(10)
         
         #ret = myapp.transfer(content, int(style))
 
@@ -66,9 +71,9 @@ def homepage(request):
             sock.close()
         
         filename = ret.split('&')
-        os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input = filename[1], output = filename[1].split('.')[0]))
+        os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input = filename[1], output = filename[1].split('.')[0]))'''
         
-        return HttpResponseRedirect("/consequence?content=%s&style=%s&adj=%s&image=%s&video=%s"%(content, style, adj, filename[0], filename[1].split('.')[0]+'.mp4'))
+        return HttpResponseRedirect("/consequence?content=%s&style=%s&adj=%s&image=%s&video=%s"%(content, style, adj, 'req_'+str(id)+'.jpg', 'req_'+str(id)+'.mp4'))
 
 def consequence(request):
     content = request.GET.get("content")
