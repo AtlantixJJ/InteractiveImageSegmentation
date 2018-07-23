@@ -98,8 +98,8 @@ def input_image(request):
             if bbox is not None:
                 #img_np_ = np.asarray(inp_style_img, dtype="uint8")[:, :, :3]
                 n1 = style_image_np[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
-                n2 = np.asarray(seg_img, dtype="uint8")[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], 3]
-                print(n1.shape, n2.shape)
+                n2 = np.asarray(seg_img, dtype="uint8")[:, :, 3:]
+
                 img_np_ = np.concatenate([n1, n2], axis=2)
                 seg_style_img = Image.fromarray(img_np_)
             else:

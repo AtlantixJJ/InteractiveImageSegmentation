@@ -1,4 +1,5 @@
 *.DS_Store
 *.zip
 grabcut_output.png
+output.png
 *.pyc

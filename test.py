@@ -4,15 +4,18 @@ import PIL.Image as Image
 import skimage.io as io
 import numpy as np
 from torch.utils.serialization import load_lua
-
+from os.path import join as osj
 
 
 IS_GPU = False
 
-image_file = "example.png"
-mask_file = "example_mask.png"
+image_file = osj("images", "example.png")
+mask_file = osj("images", "example_mask.png")
 
-data = load_lua("./completionnet_places2.t7")
+try:
+    data = load_lua(osj("models", "completionnet_places2.t7"))
+except:
+    data = load_lua(osj("models", "completionnet_places2.t7"), long_size=8)
 model, mean = data['model'], data['mean']
 model.evaluate()
 mean = mean.view(3, 1, 1)
@@ -42,9 +45,6 @@ def run(image, mask):
     return batch_input, output
 
 inp, out = run(image, mask)
-tin = load_lua("input.t7")
-print(inp)
-print(tin)
 #inp, out = run(image, np.zeros((image.shape[0], image.shape[1])))
 
 #io.imsave("mask1.png", mask[0].numpy())

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Welcome to AI Painting!</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+    .auto_hidden {
+        width:204px;border-top: 1px solid #333;
+        border-bottom: 1px solid #333;
+        border-left: 1px solid #333;
+        border-right: 1px solid #333;
+        position:absolute;
+        display:none;
+    }
+    .auto_show {
+        width:204px;
+        border-top: 1px solid #333;
+        border-bottom: 1px solid #333;
+        border-left: 1px solid #333;
+        border-right: 1px solid #333;
+        position:absolute;
+        z-index:9999; /* 设置对象的层叠顺序 */
+        display:block;
+    }
+    .auto_onmouseover{
+        color:#ffffff;
+        background-color:#CCC;
+        width:100%;
+    }
+    .auto_onmouseout{
+        color:#000000;
+        width:100%;
+        background-color:#ffffff;
+    }
+    </style>
+    <script language="javascript">
+    
+    var $ = function (id) {
+        return "string" == typeof id ? document.getElementById(id) : id;
+    }
+    var Bind = function(object, fun) {
+        return function() {
+            return fun.apply(object, arguments);
+        }
+    }
+    function AutoComplete(obj,autoObj,arr){
+        this.obj=$(obj);        //输入框
+        this.autoObj=$(autoObj);//DIV的根节点
+        this.value_arr=arr;        //不要包含重复值
+        this.index=-1;          //当前选中的DIV的索引
+        this.search_value="";   //保存当前搜索的字符
+    }
+    AutoComplete.prototype={
+        //初始化DIV的位置
+        init: function(){
+            this.autoObj.style.left = this.obj.offsetLeft + "px";
+            this.autoObj.style.top  = this.obj.offsetTop + this.obj.offsetHeight + "px";
+            this.autoObj.style.width= this.obj.offsetWidth + "px";//减去边框的长度2px   
+        },
+        //删除自动完成需要的所有DIV
+        deleteDIV: function(){
+            while(this.autoObj.hasChildNodes()){
+                this.autoObj.removeChild(this.autoObj.firstChild);
+            }
+            this.autoObj.className="auto_hidden";
+        },
+        //设置值
+        setValue: function(_this){
+            return function(){
+                _this.obj.value=this.seq;
+                _this.autoObj.className="auto_hidden";
+            }       
+        },
+        //模拟鼠标移动至DIV时，DIV高亮
+        autoOnmouseover: function(_this,_div_index){
+            return function(){
+                _this.index=_div_index;
+                var length = _this.autoObj.children.length;
+                for(var j=0;j<length;j++){
+                    if(j!=_this.index ){       
+                        _this.autoObj.childNodes[j].className='auto_onmouseout';
+                    }else{
+                        _this.autoObj.childNodes[j].className='auto_onmouseover';
+                    }
+                }
+            }
+        },
+        //更改classname
+        changeClassname: function(length){
+            for(var i=0;i<length;i++){
+                if(i!=this.index ){       
+                    this.autoObj.childNodes[i].className='auto_onmouseout';
+                }else{
+                    this.autoObj.childNodes[i].className='auto_onmouseover';
+                    this.obj.value=this.autoObj.childNodes[i].seq;
+                }
+            }
+        }
+        ,
+        //响应键盘
+        pressKey: function(event){
+            var length = this.autoObj.children.length;
+            //光标键"↓"
+            if(event.keyCode==40){
+                ++this.index;
+                if(this.index>length){
+                    this.index=0;
+                }else if(this.index==length){
+                    this.obj.value=this.search_value;
+                }
+                this.changeClassname(length);
+            }
+            //光标键"↑"
+            else if(event.keyCode==38){
+                this.index--;
+                if(this.index<-1){
+                    this.index=length - 1;
+                }else if(this.index==-1){
+                    this.obj.value=this.search_value;
+                }
+                this.changeClassname(length);
+            }
+            //回车键
+            else if(event.keyCode==13){
+                this.autoObj.className="auto_hidden";
+                this.index=-1;
+            }else{
+                this.index=-1;
+            }
+        },
+        //程序入口
+        start: function(event){
+            if(event.keyCode!=13&&event.keyCode!=38&&event.keyCode!=40){
+                this.init();
+                this.deleteDIV();
+                this.search_value=this.obj.value;
+                var valueArr=this.value_arr;
+                valueArr.sort();
+                if(this.obj.value.replace(/(^\s*)|(\s*$)/g,'')==""){ return; }//值为空，退出
+                try{ var reg = new RegExp("(" + "^" + this.obj.value + ")","i");}
+                catch (e){ return; }
+                var div_index=0;//记录创建的DIV的索引
+                for(var i=0;i<valueArr.length;i++){
+                    if(reg.test(valueArr[i])){
+                        var div = document.createElement("div");
+                        div.className="auto_onmouseout";
+                        div.seq=valueArr[i];
+                        div.onclick=this.setValue(this);
+                        div.onmouseover=this.autoOnmouseover(this,div_index);
+                        div.innerHTML=valueArr[i].replace(reg,"<strong>$1</strong>");//搜索到的字符粗体显示
+                        this.autoObj.appendChild(div);
+                        this.autoObj.className="auto_show";
+                        div_index++;
+                    }
+                }
+            }
+            this.pressKey(event);
+            window.onresize=Bind(this,function(){this.init();});
+        }
+    }
+
+    </SCRIPT>
+
+   </head>
+   <body style = "background-image:url(http://chuantu.biz/t5/133/1499913289x1694880496.png);background-size:cover;">
+        <div style = "margin-top:187px;font-weight:lighter;color:#FFF">
+        <div style = "margin:0 auto;text-align:center">
+          <p style = "font-size:72px;font-family:'Times New Roman';line-height:10px;">Artificial Intelligence</p>
+          <p style = "font-size:72px;font-family:'Times New Roman';">Painting</p>
+		<div>
+        <div style = "margin:0 auto;background-color:#FFF;width:202px;height:3px;margin-top:-17px;">
+        </div>
+        <div style = "margin:0 auto;text-align:center;">
+          <p style = "margin-top:30px;font-size:18px;line-height:0px;font-family:Arial, Helvetica, sans-serif;">write a sentence to describe the content<p>
+          <p style = "font-size:18px;font-family:Arial, Helvetica, sans-serif;">and select a target style</p>
+        <div>
+        <div>
+        
+        <div style = "margin:0 auto;background-color:#F6F8F5;width:1450px;height:500px;margin-top:40px;color:#666666;font-size:24px;">
+                <div style = "display:inline"><input placeholder = "Enter an adjective (e.g: joyful)"  type="text" style = "padding:20px;width:510px;height:60px;margin-left:6px;margin-top:40px;" id="o" name = "o" onkeyup="autoComplete.start(event)"></div>
+                <div class="auto_hidden" id="auto"></div>
+                
+                <script>
+                    var autoComplete=new AutoComplete('o','auto',['none','graphic','contemporary','last','single','green','pregnant','spiritual','radical','especial','thoroughbred','geographic','positive','whimsical','humanitarian','kinetic','liberal','bohemian','electrical','solid','normal','particular','broad','attic','emoti0ve','joyful','sensational','usual','figurative','ephemeral','motivational','glorious','hilarious','marvelous','antic','imaginative','symbolic','confident','offensive','mythical','perpetual','dreary','fraternal','comical','glamourous','sympathetic','voluptuous','responsible','artful','hazardous','outlandish','symmetric','volatile','hellenistic','hopeful','worthy','lapidary','marvellous','luscious','singular','experienced','risky','witty','chromatic','asymmetrical','elysian','phenomenal','planetary','mathematical','hectic','cryptic','widespread','asymmetric','neoclassic','attentive','logistic','splendiferous','anxious','desirable','philosophical','philosophic','anomalous','impressed','ecstatic','abundant','addictive','achromatic','satisfied','dreadful','optimistic','notable','changeable','nonobjective','tenuous','glaucous','monstrous','fantastical','wondrous','sumptuous','honourable','envious','sappy','willing','sorrowful','studious','amorphous','delighted','illusive','quizzical','beauteous','meticulous','fanatical','frenetic','nonrepresentational','combative','deceptive','numinous','ludicrous','capricious','mutable','phantasmagorical','trichromatic','educative','impish','costly','horrendous','elfish','imperious','enviable','sedative','poetical','conscientious','preternatural','immovable','impetuous','preposterous','lamentable','barbarous','voluminous','risible','ponderous','facetious','libidinous','dexterous','rapturous','farcical','chimerical','magnanimous','noetic','fastidious','palpable','empathic','sizable','finical','scrupulous','favourable','campestral','uproarious','stoical','solicitous','languorous','commendable','punctilious','sapiential','pretty','childlike','cute','cheerful','happy','enjoyable','merry','humorous','vivacious','jovial','perky','spirited','casual','lighthearted','free','carefree','friendly','open','animated','showy','vivid','flamboyant','colorful','lively','vivrant','vigorous','active','bold','provocative','passionate','fiery','intense','dynamic','dynamic&active','energetic','charming','sweet&dreamy','innocent','romantic','dreamy','filmy','pure&genuine','pure&simple','soft','harmonious','mild','domestic','happygolucky','honest&straightforward','cozy','comfortable&laidback','generous','temperate&mild','restful','natural','simple&appealing','pastoral','amiable','intimate','tender','tranquil','gentle','light','plain','unadorned','peaceful','agreeable','fresh&young','healthy','fresh','fulloflife','steady','elaborate&delicate','delicate','supple','lyrical','feminine','cultured','emotional','refined&comely','refined','moderate','gorgeous','womanly','elegant','gentle&elegant','lovely','graceful','modest','dignified&graceful','subtle','maidenly','quiet','nonchalant','polished','simple&frugal','chic','smart','fashionable','quiet&tranquil','urbane','cultivated','cerebral','composed','artistic&tasteful','simple&quiet','provincial','sober','fascinating','alluring','brilliant','sexy','captivating','decorative','rich','rich&luxurious','luxurious','mellow','extravagant','substantial','elaborate','forceful','tough','mannish','robust','wild','nostalgic','quaint','tasteful','diligent','antique','traditional','oldfashioned','sturdy','serious','heavy&deep','genuine','distinctive','dignified','strong&stout','quiet&sophisticated','gentlemanly','dapper','sound','earnest','manly','masuline','tidy&neat','noble&elegant','distinguished','eminent','sacred','formal','majestic','austere','neat','bracing','clean','crystalline','clear','refreshing','clearcut','jaunty','young','youthful','exhilarating','sporty','speedy','modern','progressive','revolutionary','intellectual','alert','sharp','precise','rational','exact','manmade','mechanical','rural','central','scenic','golden','nice','comic','creative','tropical','top','historical','catholic','mural','large','exotic','good','cultural','colourful','original','wide','grand','special','full','adorable','prime','rocky','bad','religious','civil','naked','native','beautiful','wonderful','empty','rare','sensual','famous','popular','weird','high','ultra','classic','urban','secret','strange','polish','classical','architectural','deep','rustic','common','old','live','dramatic','typical','attractive','present','fantastic','automatic','environmental','festive','spectacular','magical','erotic','huge','worth','alive','volcanic','different','compact','photographic','supernatural','mystic','pedestrian','precious','exclusive','stylish','former','various','seasonal','easy','mysterious','dangerous','agricultural','specialized','angry','academic','direct','educational','hungry','iconic','aboriginal','multicultural','miscellaneous','rapid','futuristic','sportive','curious','perennial','facial','impressive','jumbo','expressive','beamish','advanced','artificial','powerful','muscular','glamorous','critical','conservative','seductive','loose','primitive','selective','economic','steep','magnetic','arid','mystical','familiar','idyllic','detailed','much','aesthetic','lean','outstanding','flexible','legendary','realistic','recreational','thoughtful','anthropomorphic','poetic','narrative','neutral','neoclassical','theatrical','literary','spontaneous','actual','excited','eternal','eccentric','aggressive','humble','exceptional','lovable','reckless','extraordinary','symmetrical','wacky','vital','ordinary','equal','sensible','luminous','rhythmic','grateful','severe','sophisticated','responsive','upright','depressed','marginal','wealthy','imaginary','ridiculous','vernal','remarkable','furious','chaotic','important','delightful','upscale','sleek','mountainous','idle','adventurous','surrealistic','improvised','surprised','fictional','miraculous','charitable','specific','venerable','ironic','sentimental','soulful','dominant','esthetic','erratic','sensuous','impressionistic','floppy','childish','fanatic','reliable','votive','joyous','miserable','conventional','thespian','dismal','metaphysical','prospective','schematic','psychological','enigmatic','jealous','choppy','blissful','suggestive','tangible','lavish','subliminal','sloppy','formidable','expansive','sanitary','primordial','spacious','gracious','previous','loveable','modish','prosperous','frantic','mischievous','sugary','ambitious','foolish','monolithic','epidemic','economical','agrarian','reasonable','fantabulous','snappy','prestigious','virginal','arcadian','bodacious','audacious','irresistible','obvious','charismatic','elvish','knowledgeable','ascetic','subconscious','caustic','devious','naturalistic','enthusiastic','wistful','admirable','nutritional','urbanized','palatial','utopian','amorous','atypical','logical','numerous','freakish','aristocratic','pleased','delectable','drastic','expressionistic','cautious','characteristic','hallucinogenic','wary','pious','quotidian','personable','fanciful','skeptical','tremendous','eidetic','beneficial','extensive','abrasive','ultramodern','wishful','limpid','flirtatious','nebulous','nimble','irritated','hospitable','lustrous','ostentatious','laughable','hygienic','modernistic','formative','precipitous','suitable','lascivious','wasteful','touchable','pornographic','apathetic','pliable','palatable','idiosyncratic','pleasurable','peaceable','zealous','sagacious','skittish','amicable','copious','decorous','emblematic','riotous','tumultuous','deplorable','lubricious','copacetic','hedonistic','atrocious','oddish','illusionary','rigorous','bacchic','lecherous','favorable','tempestuous','excitable','noticeable','affable','impassive','agrestic','overactive','paradisiacal','companionable','imperturbable','equable','judicious','appreciable','orgiastic','tractable','immensurable']);
+                </SCRIPT>
+                
+                <div style = "display:inline">
+                <input id = "userinput" placeholder = "Describe the content of your painting (e.g: tulip field)"  name = "userinput" type = "text" 
+                style = "padding:20px;width:810px;height:60px;margin-top:40px;margin-left:9px;"></input>
+                </div>
+
+            <div class="row" style = "margin-top:30px;font-size:18px;">
+                <div style = "float:left;">
+                    <div onclick = "setclick(1);" onMouseOver="mouseOver(1)" onMouseOut="mouseOut(1)" class="thumbnail" id = "pic1" style = "height:210px;width:210px;margin-left:75px;border-radius:0px;box-shadow:2px 2px 2px #CCC;">
+                        <img src="http://chuantu.biz/t5/133/1499916965x1822614176.png" style = "padding:10px;height:165px;width:190px;">
+                        <span style = "margin:0 auto">Abstract painting</span>
+                    </div>
+                </div>
+                <div style = "float:left;">
+                    <div onclick = "setclick(2);" onMouseOver="mouseOver(2)" onMouseOut="mouseOut(2)" class="thumbnail" id = "pic2" style = "height:210px;width:210px;margin-left:15px;border-radius:0px;box-shadow:2px 2px 2px #CCC;">
+                        <img src="http://chuantu.biz/t5/133/1499917576x1822614176.jpg" style = "padding:10px;height:165px;width:190px;">
+                        <span style = "margin:0 auto">Post-impressionism<span>
+                    </div>
+                </div>
+                <div style = "float:left;">
+                    <div onclick = "setclick(3);" onMouseOver="mouseOver(3)" onMouseOut="mouseOut(3)" class="thumbnail" id = "pic3" style = "height:210px;width:210px; margin-left:15px;border-radius:0px;box-shadow:2px 2px 2px #CCC;">
+                        <img src="http://chuantu.biz/t5/133/1499917685x1822614176.jpg" style = "padding:10px;height:165px;width:190px;">
+                        <span style = "margin:0 auto">Neo-impressionism</span>
+                    </div>
+                </div>
+                <div style = "float:left;">
+                    <div onclick = "setclick(4);" onMouseOver="mouseOver(4)" onMouseOut="mouseOut(4)" class="thumbnail" id = "pic4" style = "height:210px;width:210px; margin-left:15px;border-radius:0px;box-shadow:2px 2px 2px #CCC;">
+                        <img src="http://chuantu.biz/t5/133/1499917746x1822614176.jpg" style = "padding:10px;height:165px;width:190px;">
+                        <span style = "margin:0 auto">Chinese ink painting</span>
+                    </div>
+                </div>
+                <div style = "float:left;">
+                    <div onclick = "setclick(5);" onMouseOver="mouseOver(5)" onMouseOut="mouseOut(5)" class="thumbnail" id = "pic5" style = "height:210px;width:210px; margin-left:15px;border-radius:0px;box-shadow:2px 2px 2px #CCC;">
+                        <img src="http://chuantu.biz/t5/133/1499917816x1822614176.jpg" style = "padding:10px;height:165px;width:190px;">
+                        <span style = "margin:0 auto">Suprematism</span>
+                    </div>
+                </div>
+                <div style = "float:left;">
+                    <div onclick = "setclick(6);" onMouseOver="mouseOver(6)" onMouseOut="mouseOut(6)" class="thumbnail" id = "pic6" style = "height:210px;width:210px; margin-left:15px;border-radius:0px;box-shadow:2px 2px 2px #CCC;">
+                        <img src="http://chuantu.biz/t5/133/1499918355x1822614176.png" style = "padding:10px;height:165px;width:190px;">
+                        <span style = "margin:0 auto">Impressionism</span>
+                    </div>
+                </div>
+                    <button type = "button" onclick="generate()" class = "btn btn-warning" style = "margin-top:30px;font-family:Arial, Helvetica, sans-serif; font-size:30px;color:#FFF;box-shadow:2px 2px 2px #CCC;border-radius:50px;width:500px;height:80px;">
+                        Generate
+                    </button>
+            </div>
+        </div>
+        <form action = "" id = "info" style = "display:none">
+            <input type = "text" id = "content" name = "content"></input>
+            <input type = "text" id = "style" name = "style"></input>
+            <input type = "text" id = "adj" name = "adj"></input>
+        </form>
+      <script src="https://code.jquery.com/jquery.js"></script>
+      <script type = "text/javascript">
+	  var cur = -1;
+	  function setclick(x){
+		  cur = x;
+		  document.getElementById("pic1").style = "height:210px;width:210px;margin-left:75px;border-radius:0px;box-shadow:2px 2px 2px #CCC;";
+		  for(var i = 2;i < 7;i ++){
+			  var name = "pic" + i;
+			  document.getElementById(name).style = "height:210px;width:210px;margin-left:15px;border-radius:0px;box-shadow:2px 2px 2px #CCC;";
+		  }
+		  var name = "pic" + x;
+		  if(x == 1){
+			  document.getElementById("pic1").style = "height:210px;width:210px;margin-left:75px;border-radius:0px;border:2px solid #AAA";
+		  }
+		  else{
+			  document.getElementById(name).style = "height:210px;width:210px;margin-left:15px;border-radius:0px;border:2px solid #AAA";
+		  }
+	  }
+	  function mouseOver(x){
+		  if(x != cur){
+			  var name = "pic" + x;
+			  if(x == 1){
+				  document.getElementById(name).style = "height:210px;width:210px;margin-left:75px;border-radius:0px;box-shadow:5px 5px 5px #AAA";
+			  }
+			  else{
+				  document.getElementById(name).style = "height:210px;width:210px;margin-left:15px;border-radius:0px;box-shadow:5px 5px 5px #AAA";
+			  }
+	      }
+	  }
+	  function mouseOut(x){
+		  if(x != cur){
+			  var name = "pic" + x;
+			  if(x == 1){
+				  document.getElementById(name).style = "height:210px;width:210px;margin-left:75px;border-radius:0px;box-shadow:2px 2px 2px #CCC";
+			  }
+			  else{
+				  document.getElementById(name).style = "height:210px;width:210px;margin-left:15px;border-radius:0px;box-shadow:2px 2px 2px #CCC";
+			  }
+		  }
+	  }
+      function generate(){
+          var content = document.getElementById("userinput").value;
+          var adj = document.getElementById("o").value;
+          if(adj == ""){
+              adj = "none";
+          }
+          document.getElementById("content").value = content;
+          document.getElementById("style").value = cur;
+          document.getElementById("adj").value = adj;
+          var array = new Array("none", "graphic","contemporary","last","single","green","pregnant","spiritual","radical","especial","thoroughbred","geographic","positive","whimsical","humanitarian","kinetic","liberal","bohemian","electrical","solid","normal","particular","broad","attic","emotive","joyful","sensational","usual","figurative","ephemeral","motivational","glorious","hilarious","marvelous","antic","imaginative","symbolic","confident","offensive","mythical","perpetual","dreary","fraternal","comical","glamourous","sympathetic","voluptuous","responsible","artful","hazardous","outlandish","symmetric","volatile","hellenistic","hopeful","worthy","lapidary","marvellous","luscious","singular","experienced","risky","witty","chromatic","asymmetrical","elysian","phenomenal","planetary","mathematical","hectic","cryptic","widespread","asymmetric","neoclassic","attentive","logistic","splendiferous","anxious","desirable","philosophical","philosophic","anomalous","impressed","ecstatic","abundant","addictive","achromatic","satisfied","dreadful","optimistic","notable","changeable","nonobjective","tenuous","glaucous","monstrous","fantastical","wondrous","sumptuous","honourable","envious","sappy","willing","sorrowful","studious","amorphous","delighted","illusive","quizzical","beauteous","meticulous","fanatical","frenetic","nonrepresentational","combative","deceptive","numinous","ludicrous","capricious","mutable","phantasmagorical","trichromatic","educative","impish","costly","horrendous","elfish","imperious","enviable","sedative","poetical","conscientious","preternatural","immovable","impetuous","preposterous","lamentable","barbarous","voluminous","risible","ponderous","facetious","libidinous","dexterous","rapturous","farcical","chimerical","magnanimous","noetic","fastidious","palpable","empathic","sizable","finical","scrupulous","favourable","campestral","uproarious","stoical","solicitous","languorous","commendable","punctilious","sapiential","pretty","childlike","cute","cheerful","happy","enjoyable","merry","humorous","vivacious","jovial","perky","spirited","casual","lighthearted","free","carefree","friendly","open","animated","showy","vivid","flamboyant","colorful","lively","vivrant","vigorous","active","bold","provocative","passionate","fiery","intense","dynamic","dynamic&active","energetic","charming","sweet&dreamy","innocent","romantic","dreamy","filmy","pure&genuine","pure&simple","soft","harmonious","mild","domestic","happygolucky","honest&straightforward","cozy","comfortable&laidback","generous","temperate&mild","restful","natural","simple&appealing","pastoral","amiable","intimate","tender","tranquil","gentle","light","plain","unadorned","peaceful","agreeable","fresh&young","healthy","fresh","fulloflife","steady","elaborate&delicate","delicate","supple","lyrical","feminine","cultured","emotional","refined&comely","refined","moderate","gorgeous","womanly","elegant","gentle&elegant","lovely","graceful","modest","dignified&graceful","subtle","maidenly","quiet","nonchalant","polished","simple&frugal","chic","smart","fashionable","quiet&tranquil","urbane","cultivated","cerebral","composed","artistic&tasteful","simple&quiet","provincial","sober","fascinating","alluring","brilliant","sexy","captivating","decorative","rich","rich&luxurious","luxurious","mellow","extravagant","substantial","elaborate","forceful","tough","mannish","robust","wild","nostalgic","quaint","tasteful","diligent","antique","traditional","oldfashioned","sturdy","serious","heavy&deep","genuine","distinctive","dignified","strong&stout","quiet&sophisticated","gentlemanly","dapper","sound","earnest","manly","masuline","tidy&neat","noble&elegant","distinguished","eminent","sacred","formal","majestic","austere","neat","bracing","clean","crystalline","clear","refreshing","clearcut","jaunty","young","youthful","exhilarating","sporty","speedy","modern","progressive","revolutionary","intellectual","alert","sharp","precise","rational","exact","manmade","mechanical","rural","central","scenic","golden","nice","comic","creative","tropical","top","historical","catholic","mural","large","exotic","good","cultural","colourful","original","wide","grand","special","full","adorable","prime","rocky","bad","religious","civil","naked","native","beautiful","wonderful","empty","rare","sensual","famous","popular","weird","high","ultra","classic","urban","secret","strange","polish","classical","architectural","deep","rustic","common","old","live","dramatic","typical","attractive","present","fantastic","automatic","environmental","festive","spectacular","magical","erotic","huge","worth","alive","volcanic","different","compact","photographic","supernatural","mystic","pedestrian","precious","exclusive","stylish","former","various","seasonal","easy","mysterious","dangerous","agricultural","specialized","angry","academic","direct","educational","hungry","iconic","aboriginal","multicultural","miscellaneous","rapid","futuristic","sportive","curious","perennial","facial","impressive","jumbo","expressive","beamish","advanced","artificial","powerful","muscular","glamorous","critical","conservative","seductive","loose","primitive","selective","economic","steep","magnetic","arid","mystical","familiar","idyllic","detailed","much","aesthetic","lean","outstanding","flexible","legendary","realistic","recreational","thoughtful","anthropomorphic","poetic","narrative","neutral","neoclassical","theatrical","literary","spontaneous","actual","excited","eternal","eccentric","aggressive","humble","exceptional","lovable","reckless","extraordinary","symmetrical","wacky","vital","ordinary","equal","sensible","luminous","rhythmic","grateful","severe","sophisticated","responsive","upright","depressed","marginal","wealthy","imaginary","ridiculous","vernal","remarkable","furious","chaotic","important","delightful","upscale","sleek","mountainous","idle","adventurous","surrealistic","improvised","surprised","fictional","miraculous","charitable","specific","venerable","ironic","sentimental","soulful","dominant","esthetic","erratic","sensuous","impressionistic","floppy","childish","fanatic","reliable","votive","joyous","miserable","conventional","thespian","dismal","metaphysical","prospective","schematic","psychological","enigmatic","jealous","choppy","blissful","suggestive","tangible","lavish","subliminal","sloppy","formidable","expansive","sanitary","primordial","spacious","gracious","previous","loveable","modish","prosperous","frantic","mischievous","sugary","ambitious","foolish","monolithic","epidemic","economical","agrarian","reasonable","fantabulous","snappy","prestigious","virginal","arcadian","bodacious","audacious","irresistible","obvious","charismatic","elvish","knowledgeable","ascetic","subconscious","caustic","devious","naturalistic","enthusiastic","wistful","admirable","nutritional","urbanized","palatial","utopian","amorous","atypical","logical","numerous","freakish","aristocratic","pleased","delectable","drastic","expressionistic","cautious","characteristic","hallucinogenic","wary","pious","quotidian","personable","fanciful","skeptical","tremendous","eidetic","beneficial","extensive","abrasive","ultramodern","wishful","limpid","flirtatious","nebulous","nimble","irritated","hospitable","lustrous","ostentatious","laughable","hygienic","modernistic","formative","precipitous","suitable","lascivious","wasteful","touchable","pornographic","apathetic","pliable","palatable","idiosyncratic","pleasurable","peaceable","zealous","sagacious","skittish","amicable","copious","decorous","emblematic","riotous","tumultuous","deplorable","lubricious","copacetic","hedonistic","atrocious","oddish","illusionary","rigorous","bacchic","lecherous","favorable","tempestuous","excitable","noticeable","affable","impassive","agrestic","overactive","paradisiacal","companionable","imperturbable","equable","judicious","appreciable","orgiastic","tractable","immensurable");
+          for(var i = 0;i < array.length;i ++){
+              if(adj == array[i]){
+                  break;
+              }
+              if(i == array.length - 1){
+                  alert("the adjective cannot be chosen");
+                  return;
+              }
+          }
+          
+          if(content == "")
+          {
+              alert("Please describe the content of the painting");
+          }
+          else if(cur == -1){
+              alert("Please select the painting style");
+          }
+          else{
+              document.getElementById("info").submit();
+          }
+      }
+	  </script>
+   </body>
+</html>
