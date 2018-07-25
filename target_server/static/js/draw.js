@@ -162,7 +162,7 @@ function onMouseMove(event) {
 
 function image_from_static_url(url) {
   var img = new Image();
-  img.src = "static/" + url;
+  img.src = url;
   return img;
 }
 
@@ -188,14 +188,13 @@ function setImage(data) {
   seg_style_img   = image_from_static_url(jdata.seg_style);
 
   if (fused_image) {
-    $('#image').attr('src', fused_image);
-    $('#canvas').css('background-image', 'url(' + fused_image + ')');
+    $('#image').attr('src', fused_image.src);
+    $('#canvas').css('background-image', 'url(' + fused_image.src + ')');
     canvas_img = 'fused_image';
   }
 
   if (seg_style_img) {
-    drag_img = new Image();
-    drag_img.src = seg_style_img;
+    drag_img = seg_style_img;
     var ratio = get_ratio();
     seg_st.x = Math.floor(jdata.st_x / ratio);
     seg_st.y = Math.floor(jdata.st_y / ratio);

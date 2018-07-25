@@ -171,11 +171,11 @@ def edit(request):
         
         fused_img = Image.composite(inp_style_img.point(lambda x:x*1.5), inp_style_img.point(lambda x:x/2), seg_mask)
 
-        inp_img.save(open(      "req_%d_inpcontent.jpg" % cur_id, "wb"), format="JPEG")
-        seg_mask.save(open(     "req_%d_mask.png"       % cur_id, "wb"), format="PNG")
-        inp_style_img.save(open("req_%d_inpstyle.jpg"   % cur_id, "wb"), format="JPEG")
-        fused_img.save(open(    "req_%d_fused.jpg"      % cur_id, "wb"), format="JPEG")
-        seg_style_img.save(open("req_%d_segstyle.jpg"   % cur_id, "wb"), format="JPEG")
+        inp_img.save(open(      osj("static", "req_%d_inpcontent.jpg" % cur_id), "wb"), format="JPEG")
+        seg_mask.save(open(     osj("static", "req_%d_mask.png"       % cur_id), "wb"), format="PNG")
+        inp_style_img.save(open(osj("static", "req_%d_inpstyle.jpg"   % cur_id), "wb"), format="JPEG")
+        fused_img.save(open(    osj("static", "req_%d_fused.jpg"      % cur_id), "wb"), format="JPEG")
+        seg_style_img.save(open(osj("static", "req_%d_segstyle.png"   % cur_id), "wb"), format="PNG")
 
         image = osj('static', form_data.getlist("image")[0])
         video = osj('static', form_data.getlist("video")[0])
@@ -187,7 +187,7 @@ def edit(request):
                 osj("static", "req_%d_mask.png"       % cur_id),
                 osj("static", "req_%d_inpstyle.jpg"   % cur_id),
                 osj("static", "req_%d_fused.jpg"      % cur_id),
-                osj("static", "req_%d_segstyle.jpg"   % cur_id),
+                osj("static", "req_%d_segstyle.png"   % cur_id),
                 bbox[1], bbox[0], 1
             )
         json = json.replace("\\", "\\\\")
