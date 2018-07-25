@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html>
-   <head>
-      <title>Painting Consequence</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-      {% load staticfiles %}
-   </head>
+    <head>{% load static %}
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdn.bootcss.com/popper.js/1.14.2/umd/popper.min.js"></script>
+        <script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+        <script src="https://cdn.bootcss.com/noUiSlider/11.1.0/nouislider.min.js"></script>
+        <link href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.bootcss.com/noUiSlider/11.1.0/nouislider.min.css" rel="stylesheet">
+        <link href="{% static 'css/style.css' %}" rel="stylesheet">
+        <script src="{% static 'lib/spin.min.js' %}"></script>
+        <script src="{% static 'js/graph.js' %}"></script>
+        <script src="{% static 'js/draw.js' %}"></script>
+        <script src="{% static 'js/control.js' %}"></script>
+        <title>Painting</title>
+    </head>
    <body style = "background-image:url(/static/image/background.png);background-size:cover";>
    <div style = "background-color:#F2F2F2;width:1460px;height:760px;margin:0 auto;margin-top:70px;box-shadow:3px 3px 3px #666">
       <div style = "margin-top:26px;margin-left:56px;height:708px;width:1161px;float:left;">
-        
-        <script type = "text/javascript">
-            var wid;
-            var hei;
-        </script>
-      	<img src =  "{{image}}" id = "mypic" onload="if(this.width / this.height > 1161 / 708){
+      	<img src =  "{{image}}" id = "image" onload="if(this.width / this.height > 1161 / 708){
                   this.height = this.height * 1161 / this.width;
                   this.width = 1161;
                   cvd();
@@ -23,37 +27,14 @@
                   this.width = this.width * 708 / this.height;
                   this.height = 708;
                   cvd();
-              }")>
-        <!--video src = "{{video}}" autoplay = "autoplay" id = "vivideo" style = "object-fit:fill">
-        <script type = "text/javascript">
-        function cvd(){
-            wid = document.getElementById("mypic").width;
-            hei = document.getElementById("mypic").height;
-            document.getElementById("vivideo").width = wid;
-            document.getElementById("vivideo").height = hei;
-            document.getElementById("mypic").style.display = "none";
-        }
-            /*var wid = document.getElementById("mypic").width;
-            var hei = document.getElementById("mypic").height;
-            if(wid / hei > 1161){
-                hei = hei * 1161 / wid;
-                wid = 1161;
-            }
-            else{
-                wid = wid * 708 / hei;
-                hei = 708;
-            }*/
-            /*wid = document.getElementById("mypic").width;
-            hei = document.getElementById("mypic").height;
-            alert(wid);
-            alert(hei);
-            document.getElementById("vivideo").width = wid;
-            document.getElementById("vivideo").height = hei;*/
-        
-        </script-->
-
+              }") hidden>
+        <canvas id="canvas" class="image"></canvas>
+        <!--
+        <video src = "{{video}}" autoplay = "autoplay" id = "vivideo" style = "object-fit:fill">
+        -->
       </div>
-      <div style = "float:left;width:222px;margin-left:-25px;margin-top:20px;height:600px;text-align:right">
+      
+      <div style = "float:left;width:222px;margin-left:-25px;margin-top:20px;height:500px;text-align:right">
       		<p style = "font-family:'Times New Roman', Times, serif; font-size:24px;">Content</p>
             <p style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{content}}</p>
             <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Adjective</p>
@@ -61,13 +42,16 @@
             <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Style</p>
             <p style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{style}}</p>
       </div>
-      <div>
-            <!--Atlantix-->
-            <p id = "edit_btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Edit</p>
 
-            <a href = "{{image}}" download="{{image}}" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Download</a>
-            <a href = "{{image}}" target="_blank" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">View</a>
-            <a href = /homepage style = "margin-left:152px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Back</a>
+      <div border = "solid 2px #999">
+            <!--Atlantix-->
+            <a id = "indicator" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Indicator</a>
+            <a id = "clear-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Clear</a>
+            <a id = "edit-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Edit</a>
+            <a id = "down-image-href" href = "{{image}}" download="{{image}}" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Download</a>
+            <a id = "view-image-href" href = "{{image}}" target="_blank" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">View</a>
+            <a id = "back-href" href = /homepage style = "margin-left:152px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Back</a>
+
       </div>
    </div>
 

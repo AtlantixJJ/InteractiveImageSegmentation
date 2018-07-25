@@ -98,5 +98,8 @@ def consequence(request):
     #image = 'static/' + request.GET.get("image").decode('utf-8')
     #video = 'static/' + request.GET.get("video").decode('utf-8')
     
-    return render_to_response("Paintcons.html", {'content':content, 'style':stylelist[order], 'adj':adj, 'image':image, 'video':video})
+    return render_to_response("Paintcons.html", {
+        'content':content, 'style':stylelist[order], 'adj':adj,
+        'image':image, 'video':video
+        })
 
