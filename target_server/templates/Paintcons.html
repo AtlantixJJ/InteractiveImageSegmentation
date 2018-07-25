@@ -16,28 +16,20 @@
         <title>Painting</title>
     </head>
    <body style = "background-image:url(/static/image/background.png);background-size:cover";>
+
    <div style = "background-color:#F2F2F2;width:1460px;height:760px;margin:0 auto;margin-top:70px;box-shadow:3px 3px 3px #666">
       <div style = "margin-top:26px;margin-left:56px;height:708px;width:1161px;float:left;">
       	<img src =  "{{image}}" id = "image" onload="if(this.width / this.height > 1161 / 708){
+                  record_size(this.height, this.width, this.width / 1161);
                   this.height = this.height * 1161 / this.width;
                   this.width = 1161;
                   cvd();
-              }
-              else{
+                } else {
+                  record_size(this.height, this.width, this.height / 708);
                   this.width = this.width * 708 / this.height;
                   this.height = 708;
                   cvd();
               }") hidden>
-        <img src =  "{{raw_image}}" id = "raw_image" onload="if(this.width / this.height > 1161 / 708){
-                this.height = this.height * 1161 / this.width;
-                this.width = 1161;
-                cvd();
-            }
-            else{
-                this.width = this.width * 708 / this.height;
-                this.height = 708;
-                cvd();
-            }") hidden>
         <canvas id="canvas" class="image"></canvas>
         <!--
         <video src = "{{video}}" autoplay = "autoplay" id = "vivideo" style = "object-fit:fill">
@@ -46,25 +38,37 @@
       
       <div style = "float:left;width:222px;margin-left:-25px;margin-top:20px;height:500px;text-align:right">
       		<p style = "font-family:'Times New Roman', Times, serif; font-size:24px;">Content</p>
-            <p style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{content}}</p>
+            <p id = "description" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{description}}</p>
             <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Adjective</p>
-            <p style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{adj}}</p>
+            <p id = "adj-word" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{adj}}</p>
             <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Style</p>
-            <p style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{style}}</p>
+            <p id = "style-word" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{style}}</p>
       </div>
 
       <div border = "solid 2px #999">
             <!--Atlantix-->
-            <a id = "indicator" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Indicator</a>
-            <a id = "clear-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Clear</a>
-            <a id = "edit-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Edit</a>
+            <span id = "indicator" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Indicator</span>
+            <span id = "clear-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Clear</span>
+            <span id = "edit-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Edit</span>
             <a id = "down-image-href" href = "{{image}}" download="{{image}}" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Download</a>
             <a id = "view-image-href" href = "{{image}}" target="_blank" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">View</a>
             <a id = "back-href" href = /homepage style = "margin-left:152px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Back</a>
-
       </div>
    </div>
 
+    <form action = "edit" id = "info" style = "display:none">
+        <input type = "text" id = "description" name = "description"></input>
+        <input type = "text" id = "style" name = "style"></input>
+        <input type = "text" id = "adj" name = "adj"></input>
+        <input type = "text" id = "rect" name = "rect"></input>
+    </form>
 
+   <span hidden id="content">{{content}}</span>
+   <span hidden id="image-name">{{image_name}}</span>
+   <span hidden id="video-name">{{video_name}}</span>
+   <img hidden src = "{{mask_image}}"      id = "mask_image">
+   <img hidden src = "{{inp_image}}"       id = "inp_image">
+   <img hidden src = "{{fused_image}}"     id = "fused_image">
+   <img hidden src = "{{seg_style_image}}" id = "mask_image">
    </body>
 </html>

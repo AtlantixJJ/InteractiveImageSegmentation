@@ -5,12 +5,19 @@ var graph = null;
 // preview, editing, finish
 var ctrl_state = null;
 
+// form data
+var description = null,
+    content     = null,
+    image_name  = null,
+    video_name  = null,
+    adj_word    = null,
+    style_word  = null;
+
 var mouseOld = {};
 var mouseDown = false;
 var currentModel = 0;
 var loading = false;
-var raw_image = null,
-    style_image = null,
+var style_image = null,
     img_h = null,
     img_w = null;
 
@@ -32,7 +39,7 @@ var mask              = null,
     seg_style_img     = null;
 
 var canvas_img        = null;
-
+var jdata             = null;
 var spinner = new Spinner({ color: '#999' });
 
 var COLORS = [
@@ -108,20 +115,19 @@ function onMouseDown(event) {
   mouseOld = getMouse(event);
   if (mouseOld != null) {
     mouseDown = true;
-    if (ctrl_state == "editing") {
-      if (!graph.has_result) {
-        drawing_rect = true;
-        rect_st = mouseOld;
-      } else {
-        dragging = true;
-      }
+    if (ctrl_state == "editing" && !graph.has_result) {
+      drawing_rect = true;
+      rect_st = mouseOld;
+    }
+    if (graph.has_result) {
+      dragging = true;
     }
   }
 }
 
 function onMouseUp(event) {
   var mouse = getMouse(event);
-  if (drawing_rect)
+  if (drawing_rect && mouse)
     rect_ed = mouse;
   mouseDown = false;
   drawing_rect = false;
@@ -129,14 +135,15 @@ function onMouseUp(event) {
 
 function onMouseMove(event) {
   event.preventDefault();
+
   if (mouseDown && !loading) {
     var mouse = getMouse(event);
     if (mouse == null) {
       mouseDown = false;
       return;
     }
-
     if (drawing_rect) {
+      rect_ed = mouse;
       drawRect(rect_st.x, rect_st.y, mouse.x, mouse.y);
     }
 
@@ -153,68 +160,32 @@ function onMouseMove(event) {
   }
 }
 
-function setColor(color) {
-  graph.setCurrentColor(color);
-  $('#color-drop-menu .color-block').css('background-color', color);
-  $('#color-drop-menu .color-block').css('border', color == 'white' ? 'solid 1px rgba(0, 0, 0, 0.2)' : 'none');
-}
-
-function setLineWidth(width) {
-  graph.setLineWidth(width * 2);
-  $('#width-label').text(width);
-}
-
-function setModel(model) {
-  if (loading) return;
-  currentModel = model;
-  $('#model-label').text(MODEL_NAMES[model]);
-  onStart();
-}
-
-function setImageInit(data) {
-  setLoading(false);
-  if (!data || !data.ok) return;
-
-  if (!style_image) {
-    $('#stroke').removeClass('disabled');
-    $('#option-buttons').prop('hidden', false);
-  }
-  raw_image     = data.raw_img;
-  style_image   = data.style_img;
-  img_w = data.img_h;
-  img_h = data.img_w;
-
-  if (style_image) {
-    $('#image').attr('src', style_image);
-    $('#canvas').css('background-image', 'url(' + style_image + ')');
-    canvas_img = 'style_image';
-  }
-
-  $('#image').attr('height', img_h);
-  $('#image').attr('width', img_w);
-
-  $('#canvas').attr('height', img_h);
-  $('#canvas').attr('width', img_w);
-  spinner.spin();
+function image_from_static_url(url) {
+  var img = new Image();
+  img.src = "static/" + url;
+  return img;
 }
 
 function setImage(data) {
   setLoading(false);
-  if (!data || !data.ok) return;
 
-  if (!style_image) {
-    $('#stroke').removeClass('disabled');
-    $('#option-buttons').prop('hidden', false);
+  if (!data) {
+    graph.has_result = false;
+    dragging = false;
+    resume_dragging = false;
+    return false;
   }
-  raw_image       = data.raw_img;
-  inp_image       = data.inp_img;
-  inp_style_image = data.inp_style;
-  fused_image     = data.fused_image;
-  mask = data.mask;
-  seg_img = data.seg_img;
-  seg_style_img = data.seg_style_img;
-  img_w = data.img_h;
-  img_h = data.img_w;
+  jdata = JSON.parse(data);
+  if (jdata.ok != 1) {
+    graph.has_result = false;
+    dragging = false;
+    resume_dragging = false;
+    return false;
+  }
+  mask            = image_from_static_url(jdata.mask_image);
+  inp_style_image = image_from_static_url(jdata.inp_image);
+  fused_image     = image_from_static_url(jdata.fused_image);
+  seg_style_img   = image_from_static_url(jdata.seg_style);
 
   if (fused_image) {
     $('#image').attr('src', fused_image);
@@ -225,8 +196,9 @@ function setImage(data) {
   if (seg_style_img) {
     drag_img = new Image();
     drag_img.src = seg_style_img;
-    seg_st.x = data.st_x;
-    seg_st.y = data.st_y;
+    var ratio = get_ratio();
+    seg_st.x = Math.floor(jdata.st_x / ratio);
+    seg_st.y = Math.floor(jdata.st_y / ratio);
     graph.drawImage(drag_img, seg_st.x, seg_st.y);
   }
 
@@ -254,6 +226,7 @@ function setLoading(isLoading) {
 
 function onClear() {
   graph.clear();
+  ctrl_state = "editing";
   dragging = false;
   drawing_rect = false;
   graph.has_result = false;
@@ -262,23 +235,26 @@ function onClear() {
 function onSubmit() {
   if (graph && !loading) {
     setLoading(true);
+    var ratio = get_ratio();
+    var rect = [
+      Math.floor(rect_st.x * ratio),
+      Math.floor(rect_st.y * ratio),
+      Math.floor(rect_ed.x * ratio),
+      Math.floor(rect_ed.y * ratio)]
     var formData = {
-      model: MODEL_NAMES[currentModel],
-      sketch: graph.getImageData(),
-      image: raw_image,
-      style_image: style_image,
-      rect: [rect_st.x, rect_st.y, rect_ed.x, rect_ed.y]
+      description: description,
+      content: content,
+      style: style_word,
+      adj: adj_word,
+      image: image_name,
+      video: video_name,
+      rect: rect
     };
-    $.post('edit', formData, setImage, 'json');
+    $.get("edit", formData, setImage);
     graph.has_result = true;
     dragging = false;
     resume_dragging = true;
   }
-}
-
-function onStart() {
-  onSrand();
-  $('#start').prop('hidden', true);
 }
 
 function init() {
@@ -302,28 +278,23 @@ function init() {
     );
   });
 
-  setColor('black');
-  setLineWidth(5);
-
+  description = document.getElementById('description').textContent;
+  content     = document.getElementById('content').textContent;
+  image_name  = document.getElementById('image-name').textContent;
+  video_name  = document.getElementById('video-name').textContent;
+  adj_word    = document.getElementById('adj-word').textContent;
+  style_word  = document.getElementById('style-word').textContent;
   var img = document.getElementById('image');
-  style_image = img.src;
-  raw_image = document.getElementById('content')
+  style_image = img;
   img_h = img.height;
   img_w = img.width;
   $('image').prop("hidden", true);
-  $('#canvas').css('background-image', 'url(' + style_image + ')');
+  $('#canvas').css('background-image', 'url(' + style_image.src + ')');
   canvas_img = 'style_image';
   $('#canvas').attr('height', img_h);
   $('#canvas').attr('width', img_w);
-
+  $("#edit-btn").prop("hidden", false);
   ctrl_state = "preview";
-}
-
-function download(data, filename) {
-  var link = document.createElement('a');
-  link.href = data;
-  link.download = filename;
-  link.click();
 }
 
 function onEdit() {
@@ -335,6 +306,7 @@ function onEdit() {
     $("#clear-btn").prop("hidden", false);
     document.getElementById("indicator").textContent = "Draw a box";
     document.getElementById("edit-btn").textContent = "Submit";
+    $("#edit-btn").hide().show(0);
     ctrl_state = "editing";
   } else if (ctrl_state == "editing") {
     onSubmit();

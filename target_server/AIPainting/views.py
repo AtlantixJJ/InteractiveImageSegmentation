@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 import urllib
 #[Atlantix]
+import skimage.io
 from os.path import join as osj
 from django.template import loader, Context
 from django.views.decorators.csrf import csrf_exempt
@@ -38,74 +39,30 @@ reqid=0
 ### Set this for interctive image edit debugging
 DEBUG_EDIT = True
 
-def get_png_str(image):
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    imageString = b64encode(buffered.getvalue())
-    if WINDOWS:
-        return str(imageString)[2:-1]
-    else:
-        return str(imageString)
-
-def response(image):
-    s = get_png_str(image)
-    json = '{"ok":"true", "img_h":"%d", "img_w":"%d", \
-            "raw_img":"data:image/png;base64,%s"}' % (
-        image.size[0], image.size[1], s)
-    return HttpResponse(json)
-
-def response_submit(image, inp_image, inp_style_image, mask, seg_img, seg_style_img, rect):
-    imageString = get_png_str(image)
-    imageInpaintString = get_png_str(inp_image)
-    imageInpStylizedString = get_png_str(inp_style_image)
-    maskString = get_png_str(mask)
-    #fused_image = Image.composite(image.point(lambda x:x*1.5), image.point(lambda x:x/2), mask)
-    fused_image = Image.composite(inp_style_image.point(lambda x:x*1.5), inp_style_image.point(lambda x:x/2), mask)
-    fusedString = get_png_str(fused_image)
-    segimgString = get_png_str(seg_img)
-    segstyleString = get_png_str(seg_style_img)
-
-    json = '{"ok":"true", "img_h":"%d", "img_w":"%d", \
-            "st_x": "%d", "st_y": "%d", \
-            "raw_img":"data:image/png;base64,%s", \
-            "inp_img":"data:image/png;base64,%s",\
-            "inp_style":"data:image/png;base64,%s",\
-            "mask":"data:image/png;base64,%s", \
-            "fused_image":"data:image/png;base64,%s", \
-            "seg_img":"data:image/png;base64,%s", \
-            "seg_style_img":"data:image/png;base64,%s"}' % (
-        image.size[0], image.size[1],
-        rect[0], rect[1],
-        imageString, imageInpaintString, imageInpStylizedString,
-        maskString, fusedString,
-        segimgString, segstyleString)
-
-    return HttpResponse(json)
-
 def homepage(request):
     #myapp = app.GlamorousApp()
     #myapp.initialize('/home/lljbash/data')
-    content = request.GET.get("content")
+    description = request.GET.get("description")
     style = request.GET.get("style")
     adj = request.GET.get("adj")
 
-    if(content == None):
+    if(description == None):
         if DEBUG_EDIT:
-            return HttpResponseRedirect("/consequence?content=%s&style=%s&adj=%s&image=%s&video=%s"%("req_0.jpg", "4", "sorrowful", 'req_0.jpg', 'req_0.mp4'))
+            return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s" % ("plane", "req_0_content.jpg", "4", "sorrowful", 'req_0_style.jpg', 'req_0_draw.mp4'))
         else:
             return render_to_response("AIPainting.html")
     else:
         global reqid
         (id,reqid)=(reqid+1,reqid+1)
 
-        content = str(content)
+        description = str(description)
         style = int(str(style))
-        print(content, style, adj)
+        print(description, style, adj)
         
         portno = random.randint(23000, 23111)
         
         if not DEBUG_EDIT:
-            os.system('./testapp %s %d %s %s' % (content,style,adj,'req_'+str(id)))
+            os.system('./testapp %s %d %s %s' % (description, style, adj, 'req_'+str(id)))
         '''def call_server():
             os.system('./server %d /mnt/share/ky/image_data' % portno)
         thread.start_new_thread(call_server, ())
@@ -137,16 +94,16 @@ def homepage(request):
         filename = ret.split('&')
         os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input = filename[1], output = filename[1].split('.')[0]))'''
 
-        return HttpResponseRedirect("/consequence?content=%s&style=%s&adj=%s&image=%s&video=%s"%(content, style, adj, 'req_'+str(id)+'.jpg', 'req_'+str(id)+'.mp4'))
+        return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s"%(description, 'req_%d_content.jpg' % id, style, adj, 'req_%d_style.jpg' % id, 'req_%d_draw.mp4' % id))
 
 def consequence(request):
     if request.method == "GET":
-        content = request.GET.get("content")
-        style = request.GET.get("style")
-        adj = request.GET.get("adj")
-        content = str(content)
-        style = int(str(style))
-        adj = str(adj)
+        description = str(request.GET.get("description"))
+        content     = str(request.GET.get("content")    )
+        style       = str(request.GET.get("style")      )
+        adj         = str(request.GET.get("adj")        )
+        style = int(style)
+        
         stylelist = ['Abstract painting','Post-impression','Neo-impression','Chinese ink painting','Suprematism','Impressionism']
         order = int(style) - 1
         
@@ -159,44 +116,84 @@ def consequence(request):
         #video = 'static/' + request.GET.get("video").decode('utf-8')
         
         return render_to_response("Paintcons.html", {
-            'content':content, 'style':stylelist[order], 'adj':adj,
-            'image':image, 'video':video
+            'description': description,
+            'style':stylelist[order], 'adj':adj,
+            'image_name': request.GET.get("image"),
+            'video_name': request.GET.get("video"),
+            'content':content, 'image':image, 'video':video
             })
             
 @csrf_exempt
 def edit(request):
-    if request.method == "POST":
-        form_data = request.POST
-        try:
-            #imageData = b64decode(form_data['sketch'].split(',')[1])
-            imageData =  b64decode(form_data['image'].split(',')[1])
-            styleImageData = b64decode(form_data['style_image'].split(',')[1])
-            rc = form_data.getlist('rect[]')
-            rc = [int(float(item)) for item in rc]
-            rect = [min(rc[0], rc[2]), min(rc[1], rc[3]), abs(rc[0] - rc[2]), abs(rc[1] - rc[3])]
+    if request.method == "GET":
+        form_data = request.GET
 
-            image = Image.open(BytesIO(imageData))
-            image_np = np.asarray(image, dtype="uint8")[:, :, :3]
-            style_image = Image.open(BytesIO(styleImageData))
-            style_image_np = np.asarray(style_image, dtype="uint8")[:, :, :3]
+        description = str(form_data.getlist("description")[0])
+        content     = str(form_data.getlist("content")    [0])
+        style       = str(form_data.getlist("style")      [0])
+        adj         = str(form_data.getlist("adj")        [0])
+        image       = str(form_data.getlist("image")      [0])
+        video       = str(form_data.getlist("video")      [0])
 
-            # segment image; inpainted image; segmentation mask; bounding box
-            [seg_img, inp_img, seg_mask, bbox] = api.get_segmentation(image_np, rect)
-            inp_style_img = api.get_stylization(inp_img)
-            if bbox is not None:
-                #img_np_ = np.asarray(inp_style_img, dtype="uint8")[:, :, :3]
-                n1 = style_image_np[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
-                n2 = np.asarray(seg_img, dtype="uint8")[:, :, 3:]
+        ind = content.find("_", 4)
+        cur_id = int(content[4:ind])
 
-                img_np_ = np.concatenate([n1, n2], axis=2)
-                seg_style_img = Image.fromarray(img_np_)
-            else:
-                seg_style_img = inp_style_img
-            return response_submit(image, inp_img, inp_style_img,
-                                seg_mask, seg_img, seg_style_img,
-                                bbox)
-        except Exception as e:
-            print(e)
-            return HttpResponse('{}')
+        rc = form_data.getlist('rect[]')
+        rc = [int(float(item)) for item in rc]
+        rect = [min(rc[0], rc[2]), min(rc[1], rc[3]), abs(rc[0] - rc[2]), abs(rc[1] - rc[3])]
+        #rect = [rect[1], rect[0], rect[3], rect[2]]
+
+        content_image = Image.open(osj("static", content))
+        print(content_image.size, rect)
+
+        shape = (content_image.size[0] // 4 * 4, content_image.size[1] // 4  * 4)
+        content_image = content_image.resize(shape)
+        style_image = Image.open(osj("static", image))
+        content_image_np = np.asarray(content_image, dtype="uint8")[:, :, :3]
+        style_image_np = np.asarray(style_image, dtype="uint8")[:, :, :3]
+
+        # segment image; inpainted image; segmentation mask; bounding box
+        [seg_img, inp_img, seg_mask, bbox] = api.get_segmentation(content_image_np, rect)
+        inp_style_img = api.get_stylization(inp_img)
+        
+        print(seg_img.size, inp_img.size, seg_mask.size, inp_style_img.size, bbox)
+        
+        if bbox is not None:
+            #img_np_ = np.asarray(inp_style_img, dtype="uint8")[:, :, :3]
+            n1 = style_image_np[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
+            n2 = np.asarray(seg_img, dtype="uint8")[:, :, 3:]
+
+            img_np_ = np.concatenate([n1, n2], axis=2)
+            seg_style_img = Image.fromarray(img_np_)
+        else:
+            seg_style_img = inp_style_img
+            return HttpResponse('{"ok":"0"}')
+        
+        fused_img = Image.composite(inp_style_img.point(lambda x:x*1.5), inp_style_img.point(lambda x:x/2), seg_mask)
+
+        inp_img.save(open(      "req_%d_inpcontent.jpg" % cur_id, "wb"), format="JPEG")
+        seg_mask.save(open(     "req_%d_mask.png"       % cur_id, "wb"), format="PNG")
+        inp_style_img.save(open("req_%d_inpstyle.jpg"   % cur_id, "wb"), format="JPEG")
+        fused_img.save(open(    "req_%d_fused.jpg"      % cur_id, "wb"), format="JPEG")
+        seg_style_img.save(open("req_%d_segstyle.jpg"   % cur_id, "wb"), format="JPEG")
+
+        image = osj('static', form_data.getlist("image")[0])
+        video = osj('static', form_data.getlist("video")[0])
+
+        json = '{"description":"%s","style":"%s","adj":"%s","image_name":"%s","video_name":"%s","content":"%s","image":"%s","video":"%s","mask_image":"%s","inp_image":"%s","fused_image":"%s","seg_style":"%s","st_x":"%d","st_y":"%d","ok":"%d"}' % (
+                description, style, adj,
+                form_data.get("image"), form_data.get("video"),
+                content, image, video,
+                osj("static", "req_%d_mask.png"       % cur_id),
+                osj("static", "req_%d_inpstyle.jpg"   % cur_id),
+                osj("static", "req_%d_fused.jpg"      % cur_id),
+                osj("static", "req_%d_segstyle.jpg"   % cur_id),
+                bbox[1], bbox[0], 1
+            )
+        json = json.replace("\\", "\\\\")
+        print(json)
+        return HttpResponse(json)
+
     return HttpResponse('{}')
+    
 

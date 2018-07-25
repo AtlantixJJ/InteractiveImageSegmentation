@@ -41,6 +41,15 @@ class InteractiveSegmentation(object):
         except:
             bbox = None
 
+        print(bbox)
+        if bbox[2] < 2 or bbox[3] < 2:
+            bbox = None
+
+        t_ = self.image[:, :, ::-1].copy()
+        cv.rectangle(t_ ,(rect[0], rect[1]),(rect[0]+rect[2],rect[1]+rect[3]),[255,0,0],2)
+        cv.imwrite("rect.png", t_)
+        print(bbox)
+        
         img_inpainted = cv.inpaint(self.image, self.mask, 3, cv.INPAINT_TELEA)
 
         return seg_img, img_inpainted, seg_mask, bbox
@@ -60,9 +69,11 @@ def get_segmentation(image, rect):
     seg_img, inp_img, mask, bbox = segmentor.segment_rect(rect)
     if bbox is not None:
         seg_img = seg_img[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
+        print(seg_img.shape)
         seg_img = fromarray(seg_img)
         seg_img.putalpha(fromarray(mask[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2]]))
-
+    else:
+        seg_img = fromarray(seg_img)
     return seg_img, fromarray(inp_img), fromarray(mask), bbox
 
 def get_stylization(image):
