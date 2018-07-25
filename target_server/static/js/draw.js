@@ -108,11 +108,13 @@ function onMouseDown(event) {
   mouseOld = getMouse(event);
   if (mouseOld != null) {
     mouseDown = true;
-    if (!graph.has_result) {
-      drawing_rect = true;
-      rect_st = mouseOld;
-    } else {
-      dragging = true;
+    if (ctrl_state == "editing") {
+      if (!graph.has_result) {
+        drawing_rect = true;
+        rect_st = mouseOld;
+      } else {
+        dragging = true;
+      }
     }
   }
 }
@@ -267,18 +269,11 @@ function onSubmit() {
       style_image: style_image,
       rect: [rect_st.x, rect_st.y, rect_ed.x, rect_ed.y]
     };
-    $.post('input', formData, setImage, 'json');
+    $.post('edit', formData, setImage, 'json');
     graph.has_result = true;
     dragging = false;
     resume_dragging = true;
   }
-}
-
-function onSrand() {
-  if (loading) return;
-  setLoading(true);
-  onClear();
-  $.post('srand', { model: MODEL_NAMES[currentModel] }, setImageInit, 'json');
 }
 
 function onStart() {
@@ -312,6 +307,7 @@ function init() {
 
   var img = document.getElementById('image');
   style_image = img.src;
+  raw_image = document.getElementById('content')
   img_h = img.height;
   img_w = img.width;
   $('image').prop("hidden", true);
@@ -339,7 +335,7 @@ function onEdit() {
     $("#clear-btn").prop("hidden", false);
     document.getElementById("indicator").textContent = "Draw a box";
     document.getElementById("edit-btn").textContent = "Submit";
-    ctrl_state == "editing";
+    ctrl_state = "editing";
   } else if (ctrl_state == "editing") {
     onSubmit();
     ctrl_state = "finish";
@@ -362,7 +358,4 @@ $(document).ready(function () {
 
   $('#edit-btn').click(onEdit);
   $('#clear-btn').click(onClear);
-  $('#submit').click(onSubmit);
-  $('#srand').click(onSrand);
-  $('#start').click(onStart);
 });

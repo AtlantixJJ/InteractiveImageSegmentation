@@ -28,6 +28,16 @@
                   this.height = 708;
                   cvd();
               }") hidden>
+        <img src =  "{{raw_image}}" id = "raw_image" onload="if(this.width / this.height > 1161 / 708){
+                this.height = this.height * 1161 / this.width;
+                this.width = 1161;
+                cvd();
+            }
+            else{
+                this.width = this.width * 708 / this.height;
+                this.height = 708;
+                cvd();
+            }") hidden>
         <canvas id="canvas" class="image"></canvas>
         <!--
         <video src = "{{video}}" autoplay = "autoplay" id = "vivideo" style = "object-fit:fill">
