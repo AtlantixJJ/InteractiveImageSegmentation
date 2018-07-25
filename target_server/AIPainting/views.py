@@ -6,12 +6,14 @@ from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
 
 import urllib
-import urllib2
+#[Atlantix]
+from os.path import join as osj
+#import urllib2
+#import thread
 
 import socket
 import sys
 import os
-import thread
 import time
 import random
 
@@ -30,7 +32,9 @@ def homepage(request):
     adj = request.GET.get("adj")
 
     if(content == None):
-        return render_to_response("AIPainting.html")
+        #[Atlantix]
+        return HttpResponseRedirect("/consequence?content=%s&style=%s&adj=%s&image=%s&video=%s"%("req_0.jpg", "4", "sorrowful", 'req_0.jpg', 'req_0.mp4'))
+        #return render_to_response("AIPainting.html")
     else:
         global reqid
         (id,reqid)=(reqid+1,reqid+1)
@@ -41,7 +45,8 @@ def homepage(request):
         
         portno = random.randint(23000, 23111)
         
-        os.system('./testapp %s %d %s %s' % (content,style,adj,'req_'+str(id)))
+        #[Atlantix]
+        #os.system('./testapp %s %d %s %s' % (content,style,adj,'req_'+str(id)))
         '''def call_server():
             os.system('./server %d /mnt/share/ky/image_data' % portno)
         thread.start_new_thread(call_server, ())
@@ -72,7 +77,7 @@ def homepage(request):
         
         filename = ret.split('&')
         os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input = filename[1], output = filename[1].split('.')[0]))'''
-        
+
         return HttpResponseRedirect("/consequence?content=%s&style=%s&adj=%s&image=%s&video=%s"%(content, style, adj, 'req_'+str(id)+'.jpg', 'req_'+str(id)+'.mp4'))
 
 def consequence(request):
@@ -85,8 +90,13 @@ def consequence(request):
     stylelist = ['Abstract painting','Post-impression','Neo-impression','Chinese ink painting','Suprematism','Impressionism']
     order = int(style) - 1
     
-    image = 'static/' + request.GET.get("image").decode('utf-8')
-    video = 'static/' + request.GET.get("video").decode('utf-8')
+    print(request.GET.get("image"), type(request.GET.get("image")))
+
+    #[Atlantix]
+    image = osj('static', request.GET.get("image"))
+    video = osj('static', request.GET.get("video"))
+    #image = 'static/' + request.GET.get("image").decode('utf-8')
+    #video = 'static/' + request.GET.get("video").decode('utf-8')
     
     return render_to_response("Paintcons.html", {'content':content, 'style':stylelist[order], 'adj':adj, 'image':image, 'video':video})
 
