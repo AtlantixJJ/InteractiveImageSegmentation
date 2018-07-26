@@ -26,6 +26,10 @@ var drag_img = null,
     dragging = false,
     drag_over = false,
     resume_dragging = false;
+// labeling
+var label_type = "object",
+    pixel_labeling = false,
+    resume_labeling = false;
 
 var rect_st = {},
     rect_ed = {},
@@ -123,6 +127,10 @@ function onMouseDown(event) {
     if (graph.has_result) {
       dragging = true;
     }
+    if (resume_labeling) {
+      resume_labeling = false;
+      pixel_labeling = true;
+    }
   }
 }
 
@@ -130,6 +138,10 @@ function onMouseUp(event) {
   var mouse = getMouse(event);
   if (drawing_rect && mouse)
     rect_ed = mouse;
+  if (pixel_labeling) {
+    resume_labeling = true;
+    pixel_labeling = false;
+  }
   mouseDown = false;
   drawing_rect = false;
 }
@@ -146,9 +158,9 @@ function onMouseMove(event) {
     if (drawing_rect) {
       rect_ed = mouse;
       drawRect(rect_st.x, rect_st.y, mouse.x, mouse.y);
-    }
-
-    if (dragging) {
+    } else if (pixel_labeling) {
+      drawPath(mouseOld.x, mouseOld.y, mouse.x, mouse.y);
+    } else if (dragging) {
       if (canvas_img != "inp_style_image") {
         canvas_img = "inp_style_image";
         $('#canvas').css('background-image', 'url(' + inp_style_image.src + ')');
@@ -166,7 +178,7 @@ function onMouseMove(event) {
 
 function image_from_static_url(url) {
   var img = new Image();
-  img.src = url;
+  img.src = url + "?" + new Date().getTime();;
   return img;
 }
 
@@ -180,7 +192,7 @@ function setSegmentationImage(data) {
     if (jdata.ok == 1) ok = 1;
   }
   if (!ok) {
-    document.getElementById("indicator").textContent = "Edit failed, please try another box.";
+    document.getElementById("indicator").textContent = "Edit failed, please label pixel";
     spinner.spin();
     return false;
   }
@@ -266,10 +278,16 @@ function onClear() {
   $("#view-image-href").prop("hidden", true);
   $("#indicator").prop("hidden", false);
   $("#clear-btn").prop("hidden", false);
-  document.getElementById("indicator").textContent = "Draw a box";
-  document.getElementById("edit-btn").textContent = "Submit";
-  $("#edit-btn").hide().show(0);
-  ctrl_state = "editing";
+
+  if (ctrl_state == "finish" || ctrl_state == "editing") {
+    document.getElementById("indicator").textContent = "Draw a box";
+    document.getElementById("edit-btn").textContent = "Submit";
+    $("#edit-btn").hide().show(0);
+    ctrl_state = "editing";
+  } else if (ctrl_state == "finetuning") {
+    resume_labeling = true;
+    pixel_labeling = false;
+  }
 
   dragging = false;
   drawing_rect = false;
@@ -279,13 +297,14 @@ function onClear() {
 function onSubmit() {
   if (graph && !loading) {
     setLoading(true);
-    ratio = get_ratio();
     console.log(ratio);
     var rect = [
       Math.floor(rect_st.x * ratio),
       Math.floor(rect_st.y * ratio),
       Math.floor(rect_ed.x * ratio),
       Math.floor(rect_ed.y * ratio)]
+    var canvas_data = graph.getImageData();
+
     var formData = {
       description: description,
       content: content,
@@ -293,9 +312,18 @@ function onSubmit() {
       adj: adj_word,
       image: image_name,
       video: video_name,
-      rect: rect
+      rect: rect,
     };
-    $.get("edit", formData, setSegmentationImage);
+
+    if (ctrl_state == "finetuning") {
+      formData.sketch = canvas_data;
+      $.post("edit", formData, setSegmentationImage);
+    } else {
+      formData.sketch = null;
+      $.get("edit", formData, setSegmentationImage);
+    }
+
+    
   }
 }
 
@@ -322,6 +350,28 @@ function onGetFinalResult() {
       rect: rect
     };
     $.get("done", formData, setFinalImage);
+  }
+}
+
+function onChangeLabel() {
+  if (label_type == "object") {
+    label_type = "background";
+    document.getElementById('label-btn').textContent = "Foreground";
+    document.getElementById('indicator2').textContent = "Label the background";
+    document.getElementById('label-btn').style.color = "#D2691E";
+    document.getElementById('indicator').style.color = "#008B8B";
+    $("#label-btn").hide().show(0);
+    $("#indicator").hide().show(0);
+    graph.setCurrentColor("#008B8B");
+  } else if (label_type == "background") {
+    label_type = "object";
+    document.getElementById('label-btn').textContent = "Background";
+    document.getElementById('indicator2').textContent = "Label the object";
+    document.getElementById('label-btn').style.color = "#008B8B";
+    document.getElementById('indicator').style.color = "#D2691E";
+    $("#label-btn").hide().show(0);
+    $("#indicator").hide().show(0);
+    graph.setCurrentColor("#D2691E");
   }
 }
 
@@ -362,6 +412,8 @@ function init() {
   $('#canvas').attr('height', img_h);
   $('#canvas').attr('width', img_w);
   $("#edit-btn").prop("hidden", false);
+  //$("#label-btn").prop("hidden", true);
+
   ctrl_state = "preview";
 }
 
@@ -375,11 +427,39 @@ function onEdit() {
     document.getElementById("indicator").textContent = "Draw a box";
     document.getElementById("edit-btn").textContent = "Submit";
     $("#edit-btn").hide().show(0);
+
+    graph.setLineWidth(5);
+    graph.setCurrentColor("#000000");
+    ratio = get_ratio();
     ctrl_state = "editing";
   } else if (ctrl_state == "editing") {
     onSubmit();
+    ctrl_state = "finetuning";
+
+    // line width and color
+    graph.setLineWidth(5);
+    graph.setCurrentColor("#D2691E");
+    label_type = "object";
+    $("#indicator2").prop("hidden", false);
+    $("#label-btn").prop("hidden", false);
+    document.getElementById('label-btn').textContent = "Background";
+    document.getElementById('indicator2').textContent = "Label the object";
+    document.getElementById('label-btn').style.color = "#008B8B";
+    document.getElementById('indicator2').style.color = "#D2691E";
+    document.getElementById('edit-btn').textContent = "Done";
+    $("#edit-btn").hide().show(0);
+
+
+    ctrl_state = "finetuning";
+    resume_labeling = true;
+    pixel_labeling = false;
+  } else if (ctrl_state == "finetuning") {
+    onSubmit();
+    $("#indicator2").prop("hidden", true);
     ctrl_state = "finish";
-  } else if (ctrl_state == "finish") {
+    resume_labeling = false;
+    pixel_labeling = false;
+  }else if (ctrl_state == "finish") {
     onGetFinalResult();
     ctrl_state = "preview";
     graph.has_result = false;
@@ -413,4 +493,5 @@ $(document).ready(function () {
 
   $('#edit-btn').click(onEdit);
   $('#clear-btn').click(onClear);
+  $('#label-btn').click(onChangeLabel);
 });

@@ -28,10 +28,15 @@ class InteractiveSegmentation(object):
     def set_image(self, image):
         self.image = image
 
-    def segment_rect(self, rect):
+    def set_mask(self, mask):
+        self.raw_mask = mask
+
+    def segment(self, rect, mask=None):
         self.setup_vars()
-        
-        cv.grabCut(self.image, self.raw_mask, tuple(rect), self.bgdmodel,self.fgdmodel,1,cv.GC_INIT_WITH_RECT)
+        if mask is None:
+            cv.grabCut(self.image, self.raw_mask, tuple(rect), self.bgdmodel,self.fgdmodel,1,cv.GC_INIT_WITH_RECT)
+        else:
+            cv.grabCut(self.image, self.raw_mask, tuple(rect), self.bgdmodel,self.fgdmodel,1,cv.GC_INIT_WITH_MASK)
         self.mask = np.where((self.raw_mask==1) + (self.raw_mask==3), 255, 0).astype('uint8')
         output = cv.bitwise_and(self.image,self.image,mask=self.mask)
         seg_img = output
@@ -66,9 +71,9 @@ segmentor = InteractiveSegmentation()
 stylizor = NeuralStyle(osj("..", "models", "feathers.ckpt-done"))
 inpaintor = Inpainter(osj("..", "models", "completionnet_places2.t7"), use_gpu=False)
 
-def get_segmentation(image, rect):
-    segmentor.set_image(image)
-    seg_img, mask, bbox = segmentor.segment_rect(rect)
+def get_segmentation(image, rect, user_mask=None):
+    segmentor.set_image(image); segmentor.set_mask(user_mask)
+    seg_img, mask, bbox = segmentor.segment(rect, user_mask)
 
     if bbox is not None:
         #inp_img = fromarray(cv.inpaint(image, segmentor.mask, 3, cv.INPAINT_TELEA)

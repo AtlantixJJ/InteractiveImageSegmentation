@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 import urllib
 #[Atlantix]
+from base64 import b64encode, b64decode
 import skimage.io
 from os.path import join as osj
 from PIL.Image import fromarray
@@ -147,14 +148,21 @@ def edit_done(request):
 
         inp_content_image = Image.open(osj("static", "req_%d_inpcontent.jpg" % cur_id)).convert("RGBA")
         s = [inp_content_image.size[1], inp_content_image.size[0]]
-        #inp_content_image.put_alpha(fromarray(np.zeros((s[0], s[1]), dtype="uint8")))
+        seg_mask_np = np.ones((s[0], s[1], 4), dtype="uint8")
+
         seg_image = Image.open(osj("static", "req_%d_seg.png" % cur_id))
         seg_image_np = np.asarray(seg_image, dtype="uint8")
         bg_x, ed_x = seg_st[1], seg_st[1] + seg_image_np.shape[0]
         bg_y, ed_y = seg_st[0], seg_st[0] + seg_image_np.shape[1]
+        if ed_x > seg_mask_np.shape[0]:
+            ed_x = seg_mask_np.shape[0]
+        if ed_y > seg_mask_np.shape[1]:
+            ed_y = seg_mask_np.shape[1]
+        len_x = ed_x - bg_x
+        len_y = ed_y - bg_y
         print(bg_x, ed_x, bg_y, ed_y)
-        seg_mask_np = np.ones((s[0], s[1], 4), dtype="uint8")
-        seg_mask_np[bg_x:ed_x, bg_y:ed_y] = seg_image_np
+
+        seg_mask_np[bg_x:ed_x, bg_y:ed_y] = seg_image_np[:len_x, :len_y]
         seg_mask = fromarray(seg_mask_np)
         fused_content_image = Image.alpha_composite(inp_content_image, seg_mask).convert("RGB")
 
@@ -179,13 +187,23 @@ def edit_done(request):
 def edit(request):
     if request.method == "GET":
         form_data = request.GET
+    elif request.method == "POST":
+        form_data = request.POST
 
+    try:
         description = str(form_data.getlist("description")[0])
         content     = str(form_data.getlist("content")    [0])
         style       = str(form_data.getlist("style")      [0])
         adj         = str(form_data.getlist("adj")        [0])
         image       = str(form_data.getlist("image")      [0])
         video       = str(form_data.getlist("video")      [0])
+
+        try:
+            sketch = b64decode(form_data['sketch'].split(',')[1])
+        except Exception as e:
+            sketch = None
+            print("Sketch decode error")
+            print(e)
 
         ind = content.find("_", 4)
         cur_id = int(content[4:ind])
@@ -199,6 +217,17 @@ def edit(request):
         print("Content image size: ", content_image.size)
         print("User rect: ", rect)
 
+        user_mask = None
+        if sketch is not None:
+            sketch = Image.open(BytesIO(sketch))
+            sketch = sketch.resize(content_image.size)
+            sketch_np = np.asarray(sketch, dtype="uint8")[:, :, :3]
+            user_mask = np.zeros((sketch_np.shape[0], sketch_np.shape[1]), dtype="uint8")
+            user_mask.fill(2)
+            user_mask[sketch_np[:, :, 0] > 200] = 1
+            user_mask[sketch_np[:, :, 2] > 120] = 0
+            fromarray(user_mask).save(open(osj("static", "req_%d_userinput.png" % cur_id), "wb"))
+
         shape = (content_image.size[0] // 4 * 4, content_image.size[1] // 4  * 4)
         content_image = content_image.resize(shape)
         style_image = Image.open(osj("static", image))
@@ -206,10 +235,12 @@ def edit(request):
         style_image_np = np.asarray(style_image, dtype="uint8")[:, :, :3]
 
         # segment image; inpainted image; segmentation mask; bounding box
-        [seg_img, inp_img, seg_mask, bbox] = api.get_segmentation(content_image_np, rect)
+        print("Segmentation")
+        [seg_img, inp_img, seg_mask, bbox] = api.get_segmentation(content_image_np, rect, user_mask)
         inp_style_img = api.get_stylization(inp_img)
-        
-        print(seg_img.size, inp_img.size, seg_mask.size, inp_style_img.size, bbox)
+        print("Segmentation done")
+        print("Segment size: ", seg_img.size)
+        print(inp_img.size, seg_mask.size, inp_style_img.size, bbox)
         
         if bbox is not None:
             n1 = style_image_np[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
@@ -246,7 +277,8 @@ def edit(request):
         json = json.replace("\\", "\\\\")
         print(json)
         return HttpResponse(json)
-
-    return HttpResponse('{}')
+    except Exception as e:
+        print(e)
+        return HttpResponse('{}')
     
 
