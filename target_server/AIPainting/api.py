@@ -6,6 +6,7 @@ from os.path import join as osj
 import numpy as np
 import threading
 from ns.api import NeuralStyle
+from inpaint import Inpainter
 
 class InteractiveSegmentation(object):
     def __init__(self, image=None):
@@ -44,15 +45,14 @@ class InteractiveSegmentation(object):
         print(bbox)
         if bbox[2] < 2 or bbox[3] < 2:
             bbox = None
-
+        cv.imwrite("tmp.png", self.image[:, :, ::-1])
         t_ = self.image[:, :, ::-1].copy()
         cv.rectangle(t_ ,(rect[0], rect[1]),(rect[0]+rect[2],rect[1]+rect[3]),[255,0,0],2)
         cv.imwrite("rect.png", t_)
-        print(bbox)
         
-        img_inpainted = cv.inpaint(self.image, self.mask, 3, cv.INPAINT_TELEA)
+        #img_inpainted = cv.inpaint(self.image, self.mask, 3, cv.INPAINT_TELEA)
 
-        return seg_img, img_inpainted, seg_mask, bbox
+        return seg_img, seg_mask, bbox
 
     def inpaint_image(self, image):
         """
@@ -63,10 +63,13 @@ class InteractiveSegmentation(object):
 
 segmentor = InteractiveSegmentation()
 stylizor = NeuralStyle(osj("..", "models", "feathers.ckpt-done"))
+inpaintor = Inpainter(osj("..", "models", "completionnet_places2.t7"), use_gpu=False)
 
 def get_segmentation(image, rect):
     segmentor.set_image(image)
-    seg_img, inp_img, mask, bbox = segmentor.segment_rect(rect)
+    seg_img, mask, bbox = segmentor.segment_rect(rect)
+    #inp_img = fromarray(cv.inpaint(image, segmentor.mask, 3, cv.INPAINT_TELEA)
+    inp_img = inpaintor.inpaint(segmentor.image, segmentor.mask)
     if bbox is not None:
         seg_img = seg_img[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
         print(seg_img.shape)
@@ -74,7 +77,7 @@ def get_segmentation(image, rect):
         seg_img.putalpha(fromarray(mask[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2]]))
     else:
         seg_img = fromarray(seg_img)
-    return seg_img, fromarray(inp_img), fromarray(mask), bbox
+    return seg_img, inp_img, fromarray(mask), bbox
 
 def get_stylization(image):
     return fromarray(stylizor.stylize_single(image))

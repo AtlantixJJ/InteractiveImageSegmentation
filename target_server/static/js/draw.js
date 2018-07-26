@@ -168,7 +168,7 @@ function image_from_static_url(url) {
   return img;
 }
 
-function setImage(data) {
+function setSegmentationImage(data) {
   // close spinning
   setLoading(false);
   // check data
@@ -177,11 +177,13 @@ function setImage(data) {
     jdata = JSON.parse(data);
     if (jdata.ok == 1) ok = 1;
   }
-  if (!ok)
+  if (!ok) {
+    spinner.spin();
     return false;
+  }
 
   // read data
-  seg_style_img   = image_from_static_url(jdata.seg_style);
+  seg_style_img = image_from_static_url(jdata.seg_style);
   seg_style_img.onload = function(event) {
     drag_img = seg_style_img;
     console.log(drag_img);
@@ -211,6 +213,31 @@ function setImage(data) {
   spinner.spin();
 }
 
+function setFinalImage(data) {
+  // close spinning
+  setLoading(false);
+  // check data
+  var ok = false;
+  if (data) {
+    jdata = JSON.parse(data);
+    if (jdata.ok == 1) ok = 1;
+  }
+  if (!ok) {
+    spinner.spin();
+    return false;
+  }
+
+  style_image = image_from_static_url(jdata.inp_image);
+  style_image.onload = function (event) {
+    $('#image').attr('src', style_image.src);
+    $('#canvas').css('background-image', 'url(' + style_image.src + ')');
+    canvas_img = "";
+    graph.clear();
+  }
+
+  spinner.spin();
+}
+
 function setLoading(isLoading) {
   loading = isLoading;
   $('#srand').prop('disabled', loading);
@@ -227,7 +254,20 @@ function setLoading(isLoading) {
 
 function onClear() {
   graph.clear();
+
+  $('#image').attr('src', style_image.src);
+  $('#canvas').css('background-image', 'url(' + style_image.src + ')');
+  canvas_img = "";
+
+  $("#down-image-href").prop("hidden", true);
+  $("#view-image-href").prop("hidden", true);
+  $("#indicator").prop("hidden", false);
+  $("#clear-btn").prop("hidden", false);
+  document.getElementById("indicator").textContent = "Draw a box";
+  document.getElementById("edit-btn").textContent = "Submit";
+  $("#edit-btn").hide().show(0);
   ctrl_state = "editing";
+  
   dragging = false;
   drawing_rect = false;
   graph.has_result = false;
@@ -252,7 +292,7 @@ function onSubmit() {
       video: video_name,
       rect: rect
     };
-    $.get("edit", formData, setImage);
+    $.get("edit", formData, setSegmentationImage);
   }
 }
 
@@ -262,6 +302,12 @@ function onGetFinalResult() {
     var pos = [
       Math.floor(seg_st.x * ratio),
       Math.floor(seg_st.y * ratio)]
+    var rect = [
+      Math.floor(rect_st.x * ratio),
+      Math.floor(rect_st.y * ratio),
+      Math.floor(rect_ed.x * ratio),
+      Math.floor(rect_ed.y * ratio)]
+
     var formData = {
       description: description,
       content: content,
@@ -269,9 +315,10 @@ function onGetFinalResult() {
       adj: adj_word,
       image: image_name,
       video: video_name,
-      seg_st: pos
+      seg_st: pos,
+      rect: rect
     };
-    $.get("edit", formData, setImage);
+    $.get("done", formData, setFinalImage);
   }
 }
 
@@ -336,6 +383,14 @@ function onEdit() {
     dragging = false;
     resume_dragging = false;
     canvas_img = "";
+
+    $("#down-image-href").prop("hidden", false);
+    $("#view-image-href").prop("hidden", false);
+    $("#indicator").prop("hidden", true);
+    $("#clear-btn").prop("hidden", true);
+    document.getElementById("indicator").textContent = "Indicator";
+    document.getElementById("edit-btn").textContent = "Edit";
+    $("#edit-btn").hide().show(0);
   }
 }
 

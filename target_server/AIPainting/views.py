@@ -12,6 +12,7 @@ import urllib
 #[Atlantix]
 import skimage.io
 from os.path import join as osj
+from PIL.Image import fromarray
 from django.template import loader, Context
 from django.views.decorators.csrf import csrf_exempt
 import AIPainting.api as api
@@ -124,6 +125,55 @@ def consequence(request):
             })
             
 @csrf_exempt
+def edit_done(request):
+    if request.method == "GET":
+        form_data = request.GET
+        description = str(form_data.getlist("description")[0])
+        content     = str(form_data.getlist("content")    [0])
+        style       = str(form_data.getlist("style")      [0])
+        adj         = str(form_data.getlist("adj")        [0])
+        image       = str(form_data.getlist("image")      [0])
+        video       = str(form_data.getlist("video")      [0])
+        seg_st      =     form_data.getlist("seg_st[]")
+        seg_st = [int(item) for item in seg_st]
+        
+        rc = form_data.getlist('rect[]')
+        rc = [int(float(item)) for item in rc]
+        rect = [min(rc[0], rc[2]), min(rc[1], rc[3]), abs(rc[0] - rc[2]), abs(rc[1] - rc[3])]
+        #rect = [rect[1], rect[0], rect[3], rect[2]]
+
+        ind = content.find("_", 4)
+        cur_id = int(content[4:ind])
+
+        inp_content_image = Image.open(osj("static", "req_%d_inpcontent.jpg" % cur_id)).convert("RGBA")
+        s = [inp_content_image.size[1], inp_content_image.size[0]]
+        #inp_content_image.put_alpha(fromarray(np.zeros((s[0], s[1]), dtype="uint8")))
+        seg_image = Image.open(osj("static", "req_%d_seg.png" % cur_id))
+        seg_image_np = np.asarray(seg_image, dtype="uint8")
+        bg_x, ed_x = seg_st[1], seg_st[1] + seg_image_np.shape[0]
+        bg_y, ed_y = seg_st[0], seg_st[0] + seg_image_np.shape[1]
+        print(bg_x, ed_x, bg_y, ed_y)
+        seg_mask_np = np.ones((s[0], s[1], 4), dtype="uint8")
+        seg_mask_np[bg_x:ed_x, bg_y:ed_y] = seg_image_np
+        seg_mask = fromarray(seg_mask_np)
+        fused_content_image = Image.alpha_composite(inp_content_image, seg_mask)
+        fused_content_image.save(open(osj("static", "req_%d_content.png" % cur_id), "wb"), format="PNG")
+        fused_content_image = fused_content_image.convert("RGB")
+        fused_style_image = api.get_stylization(fused_content_image)
+        fused_content_image.save(open(osj("static", "req_%d_content.jpg" % cur_id), "wb"), format="JPEG")
+        fused_style_image.save(open(  osj("static", "req_%d_style.jpg" % cur_id), "wb"), format="JPEG")
+
+        json = '{"description":"%s","style":"%s","adj":"%s","image_name":"%s","video_name":"%s","content":"%s","image":"%s","video":"%s","inp_image":"%s","ok":"%d"}' % (
+                description, style, adj,
+                form_data.get("image"), form_data.get("video"),
+                content, image, video,
+                osj("static", "req_%d_style.jpg"   % cur_id),
+                1)
+        json = json.replace("\\", "\\\\")
+        print(json)
+        return HttpResponse(json)
+
+@csrf_exempt
 def edit(request):
     if request.method == "GET":
         form_data = request.GET
@@ -144,7 +194,8 @@ def edit(request):
         #rect = [rect[1], rect[0], rect[3], rect[2]]
 
         content_image = Image.open(osj("static", content))
-        print(content_image.size, rect)
+        print("Content image size: ", content_image.size)
+        print("User rect: ", rect)
 
         shape = (content_image.size[0] // 4 * 4, content_image.size[1] // 4  * 4)
         content_image = content_image.resize(shape)
@@ -159,7 +210,6 @@ def edit(request):
         print(seg_img.size, inp_img.size, seg_mask.size, inp_style_img.size, bbox)
         
         if bbox is not None:
-            #img_np_ = np.asarray(inp_style_img, dtype="uint8")[:, :, :3]
             n1 = style_image_np[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
             n2 = np.asarray(seg_img, dtype="uint8")[:, :, 3:]
 
@@ -176,6 +226,7 @@ def edit(request):
         inp_style_img.save(open(osj("static", "req_%d_inpstyle.jpg"   % cur_id), "wb"), format="JPEG")
         fused_img.save(open(    osj("static", "req_%d_fused.jpg"      % cur_id), "wb"), format="JPEG")
         seg_style_img.save(open(osj("static", "req_%d_segstyle.png"   % cur_id), "wb"), format="PNG")
+        seg_img.save(open(      osj("static", "req_%d_seg.png"   % cur_id), "wb"), format="PNG")
 
         image = osj('static', form_data.getlist("image")[0])
         video = osj('static', form_data.getlist("video")[0])
