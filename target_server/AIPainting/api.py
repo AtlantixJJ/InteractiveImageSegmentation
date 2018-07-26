@@ -68,14 +68,16 @@ inpaintor = Inpainter(osj("..", "models", "completionnet_places2.t7"), use_gpu=F
 def get_segmentation(image, rect):
     segmentor.set_image(image)
     seg_img, mask, bbox = segmentor.segment_rect(rect)
-    #inp_img = fromarray(cv.inpaint(image, segmentor.mask, 3, cv.INPAINT_TELEA)
-    inp_img = inpaintor.inpaint(segmentor.image, segmentor.mask)
+
     if bbox is not None:
+        #inp_img = fromarray(cv.inpaint(image, segmentor.mask, 3, cv.INPAINT_TELEA)
+        inp_img = inpaintor.inpaint(segmentor.image, segmentor.mask)
         seg_img = seg_img[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
         print(seg_img.shape)
         seg_img = fromarray(seg_img)
         seg_img.putalpha(fromarray(mask[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2]]))
     else:
+        inp_img = fromarray(seg_img)
         seg_img = fromarray(seg_img)
     return seg_img, inp_img, fromarray(mask), bbox
 

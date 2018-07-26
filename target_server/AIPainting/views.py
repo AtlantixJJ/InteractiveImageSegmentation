@@ -156,9 +156,7 @@ def edit_done(request):
         seg_mask_np = np.ones((s[0], s[1], 4), dtype="uint8")
         seg_mask_np[bg_x:ed_x, bg_y:ed_y] = seg_image_np
         seg_mask = fromarray(seg_mask_np)
-        fused_content_image = Image.alpha_composite(inp_content_image, seg_mask)
-        fused_content_image.save(open(osj("static", "req_%d_content.png" % cur_id), "wb"), format="PNG")
-        fused_content_image = fused_content_image.convert("RGB")
+        fused_content_image = Image.alpha_composite(inp_content_image, seg_mask).convert("RGB")
         fused_style_image = api.get_stylization(fused_content_image)
         fused_content_image.save(open(osj("static", "req_%d_content.jpg" % cur_id), "wb"), format="JPEG")
         fused_style_image.save(open(  osj("static", "req_%d_style.jpg" % cur_id), "wb"), format="JPEG")

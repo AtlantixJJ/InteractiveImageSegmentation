@@ -156,6 +156,8 @@ function onMouseMove(event) {
       }
       graph.clear();
       graph.drawImage(drag_img, mouse.x - drag_img.width / 2, mouse.y - drag_img.height / 2);
+      seg_st.x = mouse.x - drag_img.width / 2;
+      seg_st.y = mouse.y - drag_img.height / 2;
     }
     //drawShape(mouseOld.x, mouseOld.y, mouse.x, mouse.y);
     mouseOld = mouse;
@@ -178,6 +180,7 @@ function setSegmentationImage(data) {
     if (jdata.ok == 1) ok = 1;
   }
   if (!ok) {
+    document.getElementById("indicator").textContent = "Edit failed, please try another box.";
     spinner.spin();
     return false;
   }
@@ -267,7 +270,7 @@ function onClear() {
   document.getElementById("edit-btn").textContent = "Submit";
   $("#edit-btn").hide().show(0);
   ctrl_state = "editing";
-  
+
   dragging = false;
   drawing_rect = false;
   graph.has_result = false;
@@ -378,7 +381,7 @@ function onEdit() {
     ctrl_state = "finish";
   } else if (ctrl_state == "finish") {
     onGetFinalResult();
-    ctrl_state = "exit";
+    ctrl_state = "preview";
     graph.has_result = false;
     dragging = false;
     resume_dragging = false;
