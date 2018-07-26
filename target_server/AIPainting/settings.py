@@ -125,7 +125,7 @@ if platform.system() == "Linux":
         # Put strings here, like "/home/html/static" or "C:/www/django/static".
         # Always use forward slashes, even on Windows.
         # Don't forget to use absolute paths, not relative paths.
-        '/mnt/share/ky/Aesthetic-Painting/web/AIPainting/static',
+        '/mnt/share/atlantix/AP/target_server/static',
     )
 elif platform.system() == "Windows":
     STATICFILES_DIRS = (
@@ -133,4 +133,11 @@ elif platform.system() == "Windows":
         # Always use forward slashes, even on Windows.
         # Don't forget to use absolute paths, not relative paths.
         'D:/InteractiveImageSegmentation/target_server/static',
+    )
+elif platform.system() == "Darwin":
+    STATICFILES_DIRS = (
+        # Put strings here, like "/home/html/static" or "C:/www/django/static".
+        # Always use forward slashes, even on Windows.
+        # Don't forget to use absolute paths, not relative paths.
+        '/Users/xujianjin/python/InteractiveImageSegmentation/target_server/static',
     )

@@ -14,7 +14,7 @@ import numpy as np
 from base64 import b64encode, b64decode
 
 index_temp = loader.get_template("index.html")
-
+STATIC_DIR = "."
 WINDOWS = True
 
 def get_png_str(image):
@@ -119,7 +119,7 @@ def srand(request):
     print(form_data)
     if request.method == 'POST':
         try:
-            image = Image.open(osj("home", "static", "img", "shenyang3.jpg"))
+            image = Image.open(osj("home", STATIC_DIR, "img", "shenyang3.jpg"))
             shape = (image.size[0] // 4 * 4, image.size[1] // 4  * 4)
             image = image.resize(shape)
             style_image = api.get_stylization(image)

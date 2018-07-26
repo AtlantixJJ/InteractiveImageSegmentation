@@ -1,12 +1,27 @@
 import sys
+sys.path.insert(0, "../")
 sys.path.insert(0, "../..")
+sys.path.insert(0, "../../ns/")
 import cv2 as cv
 from PIL.Image import fromarray
 from os.path import join as osj
 import numpy as np
 import threading
-from ns.api import NeuralStyle
+
 from inpaint import Inpainter
+
+"""
+import platform
+if platform.system() == "Linux":
+    DEBUG_EDIT = False
+else:
+    DEBUG_EDIT = True
+    #export CUDA_VISIBLE_DEVICES=0
+"""
+DEBUG_EDIT = True
+from ns.api import NeuralStyle
+### [MERGE] comment out this line to use our own stylization
+stylizor = NeuralStyle(osj("..", "..", "models", "feathers.ckpt-done"))
 
 class InteractiveSegmentation(object):
     def __init__(self, image=None):
@@ -67,9 +82,7 @@ class InteractiveSegmentation(object):
         return cv.inpaint(image, self.mask, 3, cv.INPAINT_TELEA)
 
 segmentor = InteractiveSegmentation()
-### [MERGE] comment out this line to use our own stylization
-stylizor = NeuralStyle(osj("..", "models", "feathers.ckpt-done"))
-inpaintor = Inpainter(osj("..", "models", "completionnet_places2.t7"), use_gpu=False)
+inpaintor = Inpainter(osj("..", "..", "models", "completionnet_places2.t7"), use_gpu=False)
 
 def get_segmentation(image, rect, user_mask=None):
     segmentor.set_image(image); segmentor.set_mask(user_mask)

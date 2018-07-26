@@ -37,8 +37,15 @@ import random
 #import app
 
 reqid=0
-
+STATIC_DIR = "."
 ### Set this for interctive image edit debugging
+"""
+import platform
+if platform.system() == "Linux":
+    DEBUG_EDIT = False
+else:
+    DEBUG_EDIT = True
+"""
 DEBUG_EDIT = True
 
 def homepage(request):
@@ -146,11 +153,11 @@ def edit_done(request):
         ind = content.find("_", 4)
         cur_id = int(content[4:ind])
 
-        inp_content_image = Image.open(osj("static", "req_%d_inpcontent.jpg" % cur_id)).convert("RGBA")
+        inp_content_image = Image.open(osj(STATIC_DIR, "req_%d_inpcontent.jpg" % cur_id)).convert("RGBA")
         s = [inp_content_image.size[1], inp_content_image.size[0]]
         seg_mask_np = np.ones((s[0], s[1], 4), dtype="uint8")
 
-        seg_image = Image.open(osj("static", "req_%d_seg.png" % cur_id))
+        seg_image = Image.open(osj(STATIC_DIR, "req_%d_seg.png" % cur_id))
         seg_image_np = np.asarray(seg_image, dtype="uint8")
         bg_x, ed_x = seg_st[1], seg_st[1] + seg_image_np.shape[0]
         bg_y, ed_y = seg_st[0], seg_st[0] + seg_image_np.shape[1]
@@ -170,14 +177,14 @@ def edit_done(request):
         fused_style_image = api.get_stylization(fused_content_image)
         ###
 
-        fused_content_image.save(open(osj("static", "req_%d_content.jpg" % cur_id), "wb"), format="JPEG")
-        fused_style_image.save(open(  osj("static", "req_%d_style.jpg" % cur_id), "wb"), format="JPEG")
+        fused_content_image.save(open(osj(STATIC_DIR, "req_%d_content.jpg" % cur_id), "wb"), format="JPEG")
+        fused_style_image.save(open(  osj(STATIC_DIR, "req_%d_style.jpg" % cur_id), "wb"), format="JPEG")
 
         json = '{"description":"%s","style":"%s","adj":"%s","image_name":"%s","video_name":"%s","content":"%s","image":"%s","video":"%s","inp_image":"%s","ok":"%d"}' % (
                 description, style, adj,
                 form_data.get("image"), form_data.get("video"),
                 content, image, video,
-                osj("static", "req_%d_style.jpg"   % cur_id),
+                osj(STATIC_DIR, "req_%d_style.jpg"   % cur_id),
                 1)
         json = json.replace("\\", "\\\\")
         print(json)
@@ -213,7 +220,7 @@ def edit(request):
         rect = [min(rc[0], rc[2]), min(rc[1], rc[3]), abs(rc[0] - rc[2]), abs(rc[1] - rc[3])]
         #rect = [rect[1], rect[0], rect[3], rect[2]]
 
-        content_image = Image.open(osj("static", content))
+        content_image = Image.open(osj(STATIC_DIR, content))
         print("Content image size: ", content_image.size)
         print("User rect: ", rect)
 
@@ -226,11 +233,11 @@ def edit(request):
             user_mask.fill(2)
             user_mask[sketch_np[:, :, 0] > 200] = 1
             user_mask[sketch_np[:, :, 2] > 120] = 0
-            fromarray(user_mask).save(open(osj("static", "req_%d_userinput.png" % cur_id), "wb"))
+            fromarray(user_mask).save(open(osj(STATIC_DIR, "req_%d_userinput.png" % cur_id), "wb"))
 
         shape = (content_image.size[0] // 4 * 4, content_image.size[1] // 4  * 4)
         content_image = content_image.resize(shape)
-        style_image = Image.open(osj("static", image))
+        style_image = Image.open(osj(STATIC_DIR, image))
         content_image_np = np.asarray(content_image, dtype="uint8")[:, :, :3]
         style_image_np = np.asarray(style_image, dtype="uint8")[:, :, :3]
 
@@ -254,12 +261,12 @@ def edit(request):
         
         fused_img = Image.composite(inp_style_img.point(lambda x:x*1.5), inp_style_img.point(lambda x:x/2), seg_mask)
 
-        inp_img.save(open(      osj("static", "req_%d_inpcontent.jpg" % cur_id), "wb"), format="JPEG")
-        seg_mask.save(open(     osj("static", "req_%d_mask.png"       % cur_id), "wb"), format="PNG")
-        inp_style_img.save(open(osj("static", "req_%d_inpstyle.jpg"   % cur_id), "wb"), format="JPEG")
-        fused_img.save(open(    osj("static", "req_%d_fused.jpg"      % cur_id), "wb"), format="JPEG")
-        seg_style_img.save(open(osj("static", "req_%d_segstyle.png"   % cur_id), "wb"), format="PNG")
-        seg_img.save(open(      osj("static", "req_%d_seg.png"        % cur_id), "wb"), format="PNG")
+        inp_img.save(open(      osj(STATIC_DIR, "req_%d_inpcontent.jpg" % cur_id), "wb"), format="JPEG")
+        seg_mask.save(open(     osj(STATIC_DIR, "req_%d_mask.png"       % cur_id), "wb"), format="PNG")
+        inp_style_img.save(open(osj(STATIC_DIR, "req_%d_inpstyle.jpg"   % cur_id), "wb"), format="JPEG")
+        fused_img.save(open(    osj(STATIC_DIR, "req_%d_fused.jpg"      % cur_id), "wb"), format="JPEG")
+        seg_style_img.save(open(osj(STATIC_DIR, "req_%d_segstyle.png"   % cur_id), "wb"), format="PNG")
+        seg_img.save(open(      osj(STATIC_DIR, "req_%d_seg.png"        % cur_id), "wb"), format="PNG")
 
         image = osj('static', form_data.getlist("image")[0])
         video = osj('static', form_data.getlist("video")[0])
@@ -268,10 +275,10 @@ def edit(request):
                 description, style, adj,
                 form_data.get("image"), form_data.get("video"),
                 content, image, video,
-                osj("static", "req_%d_mask.png"       % cur_id),
-                osj("static", "req_%d_inpstyle.jpg"   % cur_id),
-                osj("static", "req_%d_fused.jpg"      % cur_id),
-                osj("static", "req_%d_segstyle.png"   % cur_id),
+                osj(STATIC_DIR, "req_%d_mask.png"       % cur_id),
+                osj(STATIC_DIR, "req_%d_inpstyle.jpg"   % cur_id),
+                osj(STATIC_DIR, "req_%d_fused.jpg"      % cur_id),
+                osj(STATIC_DIR, "req_%d_segstyle.png"   % cur_id),
                 bbox[1], bbox[0], 1
             )
         json = json.replace("\\", "\\\\")
