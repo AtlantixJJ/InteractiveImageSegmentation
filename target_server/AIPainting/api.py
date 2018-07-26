@@ -62,6 +62,7 @@ class InteractiveSegmentation(object):
         return cv.inpaint(image, self.mask, 3, cv.INPAINT_TELEA)
 
 segmentor = InteractiveSegmentation()
+### [MERGE] comment out this line to use our own stylization
 stylizor = NeuralStyle(osj("..", "models", "feathers.ckpt-done"))
 inpaintor = Inpainter(osj("..", "models", "completionnet_places2.t7"), use_gpu=False)
 

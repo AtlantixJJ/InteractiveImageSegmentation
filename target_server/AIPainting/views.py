@@ -59,7 +59,7 @@ def homepage(request):
         description = str(description)
         style = int(str(style))
         print(description, style, adj)
-        
+
         portno = random.randint(23000, 23111)
         
         if not DEBUG_EDIT:
@@ -157,7 +157,11 @@ def edit_done(request):
         seg_mask_np[bg_x:ed_x, bg_y:ed_y] = seg_image_np
         seg_mask = fromarray(seg_mask_np)
         fused_content_image = Image.alpha_composite(inp_content_image, seg_mask).convert("RGB")
+
+        ### [MERGE] change this to ordinary stylization, with video generation
         fused_style_image = api.get_stylization(fused_content_image)
+        ###
+
         fused_content_image.save(open(osj("static", "req_%d_content.jpg" % cur_id), "wb"), format="JPEG")
         fused_style_image.save(open(  osj("static", "req_%d_style.jpg" % cur_id), "wb"), format="JPEG")
 
@@ -224,7 +228,7 @@ def edit(request):
         inp_style_img.save(open(osj("static", "req_%d_inpstyle.jpg"   % cur_id), "wb"), format="JPEG")
         fused_img.save(open(    osj("static", "req_%d_fused.jpg"      % cur_id), "wb"), format="JPEG")
         seg_style_img.save(open(osj("static", "req_%d_segstyle.png"   % cur_id), "wb"), format="PNG")
-        seg_img.save(open(      osj("static", "req_%d_seg.png"   % cur_id), "wb"), format="PNG")
+        seg_img.save(open(      osj("static", "req_%d_seg.png"        % cur_id), "wb"), format="PNG")
 
         image = osj('static', form_data.getlist("image")[0])
         video = osj('static', form_data.getlist("video")[0])
