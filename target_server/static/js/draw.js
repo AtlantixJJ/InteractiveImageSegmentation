@@ -4,6 +4,7 @@ var graph = null;
 
 // preview, editing, finish
 var ctrl_state = null;
+var ratio = null;
 
 // form data
 var description = null,
@@ -150,7 +151,8 @@ function onMouseMove(event) {
     if (dragging) {
       if (canvas_img != "inp_style_image") {
         canvas_img = "inp_style_image";
-        $('#canvas').css('background-image', 'url(' + inp_style_image + ')');
+        $('#canvas').css('background-image', 'url(' + inp_style_image.src + ')');
+        $('#image').attr('src', inp_style_image.src);
       }
       graph.clear();
       graph.drawImage(drag_img, mouse.x - drag_img.width / 2, mouse.y - drag_img.height / 2);
@@ -167,45 +169,45 @@ function image_from_static_url(url) {
 }
 
 function setImage(data) {
+  // close spinning
   setLoading(false);
-
-  if (!data) {
-    graph.has_result = false;
-    dragging = false;
-    resume_dragging = false;
-    return false;
+  // check data
+  var ok = false;
+  if (data) {
+    jdata = JSON.parse(data);
+    if (jdata.ok == 1) ok = 1;
   }
-  jdata = JSON.parse(data);
-  if (jdata.ok != 1) {
-    graph.has_result = false;
-    dragging = false;
-    resume_dragging = false;
+  if (!ok)
     return false;
+
+  // read data
+  seg_style_img   = image_from_static_url(jdata.seg_style);
+  seg_style_img.onload = function(event) {
+    drag_img = seg_style_img;
+    console.log(drag_img);
+    drag_img.width = Math.ceil(drag_img.width / ratio);
+    drag_img.height = Math.ceil(drag_img.height / ratio);
+    console.log(drag_img);
+    seg_st.x = Math.floor(jdata.st_y / ratio);
+    seg_st.y = Math.floor(jdata.st_x / ratio);
+    graph.drawImage(seg_style_img, seg_st.x, seg_st.y);
   }
   mask            = image_from_static_url(jdata.mask_image);
   inp_style_image = image_from_static_url(jdata.inp_image);
   fused_image     = image_from_static_url(jdata.fused_image);
-  seg_style_img   = image_from_static_url(jdata.seg_style);
-
-  if (fused_image) {
+  fused_image.onload = function (event) {
     $('#image').attr('src', fused_image.src);
     $('#canvas').css('background-image', 'url(' + fused_image.src + ')');
     canvas_img = 'fused_image';
+    // set flags to dragging
+    graph.has_result = true;
+    graph.clear();
+    dragging = true;
+    resume_dragging = false;
   }
-
-  if (seg_style_img) {
-    drag_img = seg_style_img;
-    var ratio = get_ratio();
-    seg_st.x = Math.floor(jdata.st_x / ratio);
-    seg_st.y = Math.floor(jdata.st_y / ratio);
-    graph.drawImage(drag_img, seg_st.x, seg_st.y);
-  }
-
-  $('#image').attr('height', img_h);
-  $('#image').attr('width', img_w);
-
-  $('#canvas').attr('height', img_h);
-  $('#canvas').attr('width', img_w);
+  // modify indicator
+  document.getElementById("indicator").textContent = "Drag around";
+  document.getElementById("edit-btn").textContent = "Done";
   spinner.spin();
 }
 
@@ -234,7 +236,8 @@ function onClear() {
 function onSubmit() {
   if (graph && !loading) {
     setLoading(true);
-    var ratio = get_ratio();
+    ratio = get_ratio();
+    console.log(ratio);
     var rect = [
       Math.floor(rect_st.x * ratio),
       Math.floor(rect_st.y * ratio),
@@ -250,9 +253,25 @@ function onSubmit() {
       rect: rect
     };
     $.get("edit", formData, setImage);
-    graph.has_result = true;
-    dragging = false;
-    resume_dragging = true;
+  }
+}
+
+function onGetFinalResult() {
+  if (graph && !loading) {
+    setLoading(true);
+    var pos = [
+      Math.floor(seg_st.x * ratio),
+      Math.floor(seg_st.y * ratio)]
+    var formData = {
+      description: description,
+      content: content,
+      style: style_word,
+      adj: adj_word,
+      image: image_name,
+      video: video_name,
+      seg_st: pos
+    };
+    $.get("edit", formData, setImage);
   }
 }
 
@@ -310,6 +329,13 @@ function onEdit() {
   } else if (ctrl_state == "editing") {
     onSubmit();
     ctrl_state = "finish";
+  } else if (ctrl_state == "finish") {
+    onGetFinalResult();
+    ctrl_state = "exit";
+    graph.has_result = false;
+    dragging = false;
+    resume_dragging = false;
+    canvas_img = "";
   }
 }
 

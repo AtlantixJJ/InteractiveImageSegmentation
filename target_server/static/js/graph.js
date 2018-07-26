@@ -40,7 +40,7 @@ function Graph(document) {
   };
   
   this.drawImage = function (img, x, y) {
-    ctx.drawImage(img, x, y);
+    ctx.drawImage(img, x, y, img.width, img.height);
   };
 
   this.clear = function () {
