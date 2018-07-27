@@ -251,8 +251,8 @@ function setFinalImage(data) {
     $('#image').attr('src', style_image.src);
     $('#canvas').css('background-image', 'url(' + style_image.src + ')');
     canvas_img = "style_image";
-    $('#canvas').attr('height', style_image.height);
-    $('#canvas').attr('width', style_image.width);
+    $('#canvas').attr('height', img_h);
+    $('#canvas').attr('width', img_w);
     graph.clear();
   }
 
