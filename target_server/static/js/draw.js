@@ -5,7 +5,7 @@ var graph = null;
 // preview, editing, finish
 var ctrl_state = null;
 var ratio = null;
-
+var first_load = false;
 // form data
 var description = null,
     content     = null,
@@ -165,6 +165,8 @@ function onMouseMove(event) {
         canvas_img = "inp_style_image";
         $('#canvas').css('background-image', 'url(' + inp_style_image.src + ')');
         $('#image').attr('src', inp_style_image.src);
+        $('#canvas').attr('height', img_h);
+        $('#canvas').attr('width', img_w);
       }
       graph.clear();
       graph.drawImage(drag_img, mouse.x - drag_img.width / 2, mouse.y - drag_img.height / 2);
@@ -215,6 +217,8 @@ function setSegmentationImage(data) {
   fused_image.onload = function (event) {
     $('#image').attr('src', fused_image.src);
     $('#canvas').css('background-image', 'url(' + fused_image.src + ')');
+    $('#canvas').attr('height', img_h);
+    $('#canvas').attr('width', img_w);
     canvas_img = 'fused_image';
     // set flags to dragging
     graph.has_result = true;
@@ -246,7 +250,9 @@ function setFinalImage(data) {
   style_image.onload = function (event) {
     $('#image').attr('src', style_image.src);
     $('#canvas').css('background-image', 'url(' + style_image.src + ')');
-    canvas_img = "";
+    canvas_img = "style_image";
+    $('#canvas').attr('height', style_image.height);
+    $('#canvas').attr('width', style_image.width);
     graph.clear();
   }
 
@@ -272,7 +278,9 @@ function onClear() {
 
   $('#image').attr('src', style_image.src);
   $('#canvas').css('background-image', 'url(' + style_image.src + ')');
-  canvas_img = "";
+  canvas_img = "style_image";
+  $('#canvas').attr('height', img_h);
+  $('#canvas').attr('width', img_w);
 
   $("#down-image-href").prop("hidden", true);
   $("#view-image-href").prop("hidden", true);
@@ -402,17 +410,35 @@ function init() {
   video_name  = document.getElementById('video-name').textContent;
   adj_word    = document.getElementById('adj-word').textContent;
   style_word  = document.getElementById('style-word').textContent;
-  var img = document.getElementById('image');
-  style_image = img;
-  img_h = img.height;
-  img_w = img.width;
-  $('image').prop("hidden", true);
-  $('#canvas').css('background-image', 'url(' + style_image.src + ')');
+  style_image = document.getElementById('image');
   canvas_img = 'style_image';
-  $('#canvas').attr('height', img_h);
-  $('#canvas').attr('width', img_w);
-  $("#edit-btn").prop("hidden", false);
-  //$("#label-btn").prop("hidden", true);
+  first_load = true;
+  style_image.onload = function() {
+    console.log("style onload");
+    if (!first_load) return false;
+    first_load = false;
+    if(this.width / this.height > 1161 / 708){
+      record_size(this.height, this.width, this.width / 1161);
+      this.height = this.height * 1161 / this.width;
+      this.width = 1161;
+      cvd();
+    } else {
+      record_size(this.height, this.width, this.height / 708);
+      this.width = this.width * 708 / this.height;
+      this.height = 708;
+      cvd();
+    }
+    img_h = style_image.height;
+    img_w = style_image.width;
+    $('#canvas').css('background-image', 'url(' + style_image.src + ')');
+    canvas_img = 'style_image';
+    $('#canvas').attr('height', img_h);
+    $('#canvas').attr('width', img_w);
+    $("#edit-btn").prop("hidden", false);
+    $('image').prop("hidden", true);
+  };
+
+  $("#label-btn").prop("hidden", true);
 
   ctrl_state = "preview";
 }
@@ -474,6 +500,7 @@ function onEdit() {
     document.getElementById("indicator").textContent = "Indicator";
     document.getElementById("edit-btn").textContent = "Edit";
     $("#edit-btn").hide().show(0);
+    $("#label-btn").prop("hidden", true);
   }
 }
 

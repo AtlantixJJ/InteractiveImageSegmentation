@@ -6,12 +6,12 @@ import skimage.io as io
 import numpy as np
 from torch.utils.serialization import load_lua
 from os.path import join as osj
-
+import sys
 
 IS_GPU = False
 
-image_file = osj("images", "example.png")
-mask_file = osj("images", "example_mask.png")
+image_file = osj(sys.argv[1])
+mask_file = osj(sys.argv[2])
 
 class Inpainter(object):
     def __init__(self):

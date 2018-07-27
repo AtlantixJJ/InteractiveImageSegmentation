@@ -72,7 +72,7 @@ def homepage(request):
         
         if not DEBUG_EDIT:
             os.system('./testapp %s %d %s %s' % (description, style, adj, 'req_'+str(id)))
-            os.system('mv req_%d_origin.jpg req_%d_content.jpg' % (id, id))
+            os.system('cp req_%d_origin.jpg req_%d_content.jpg' % (id, id))
             inp_img = Image.open("req_%d_content.jpg" % id)
             inp_style_img = api.get_stylization(inp_img)
             inp_style_img.save(open(osj(STATIC_DIR, "req_%d_style.jpg" % id), "wb"), format="JPEG")

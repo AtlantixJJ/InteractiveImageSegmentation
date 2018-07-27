@@ -70,8 +70,7 @@ def main(model_file, image_file):
     tf.logging.info('Image size: %dx%d' % (width, height))
 
     with tf.Graph().as_default():
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
+        config = tf.ConfigProto();config.gpu_options.allow_growth = True
         with tf.Session(config=config).as_default() as sess:
 
             # Read image data.
