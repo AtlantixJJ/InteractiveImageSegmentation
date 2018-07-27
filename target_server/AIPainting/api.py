@@ -82,7 +82,7 @@ class InteractiveSegmentation(object):
         return cv.inpaint(image, self.mask, 3, cv.INPAINT_TELEA)
 
 segmentor = InteractiveSegmentation()
-inpaintor = Inpainter(osj("..", "..", "models", "completionnet_places2.t7"), use_gpu=False)
+inpaintor = Inpainter(osj("..", "..", "models", "completionnet_places2.t7"), use_gpu=True)
 
 def get_segmentation(image, rect, user_mask=None):
     segmentor.set_image(image); segmentor.set_mask(user_mask)

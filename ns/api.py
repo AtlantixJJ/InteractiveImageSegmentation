@@ -70,7 +70,9 @@ def main(model_file, image_file):
     tf.logging.info('Image size: %dx%d' % (width, height))
 
     with tf.Graph().as_default():
-        with tf.Session().as_default() as sess:
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        with tf.Session(config=config).as_default() as sess:
 
             # Read image data.
             image_preprocessing_fn, _ = preprocessing_factory.get_preprocessing(

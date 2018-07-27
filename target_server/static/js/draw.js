@@ -178,7 +178,7 @@ function onMouseMove(event) {
 
 function image_from_static_url(url) {
   var img = new Image();
-  img.src = url + "?" + new Date().getTime();;
+  img.src = "static/" + url + "?" + new Date().getTime();;
   return img;
 }
 
