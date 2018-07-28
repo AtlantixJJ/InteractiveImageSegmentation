@@ -29,9 +29,10 @@ class NeuralStyle(object):
         # Get image's height and width.
         self.height = tf.shape(self.image_t)[0]
         self.width = tf.shape(self.image_t)[1]
-
+    
         self.G = tf.Graph()
-        self.sess = tf.Session()
+        config = tf.ConfigProto();config.gpu_options.allow_growth = True
+        self.sess = tf.Session(config=config)
 
         image = normal_process(self.image_t)
 
