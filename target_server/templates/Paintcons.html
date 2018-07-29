@@ -13,23 +13,35 @@
         <script src="{% static 'js/graph.js' %}"></script>
         <script src="{% static 'js/draw.js' %}"></script>
         <script src="{% static 'js/control.js' %}"></script>
+        <script>first_load = true;</script>
         <title>Painting</title>
     </head>
    <body style = "background-image:url(/static/image/background.png);background-size:cover";>
 
    <div style = "background-color:#F2F2F2;width:1460px;height:760px;margin:0 auto;margin-top:70px;box-shadow:3px 3px 3px #666">
       <div style = "margin-top:26px;margin-left:56px;height:708px;width:1161px;float:left;">
-      	<img src =  "{{image}}" id = "image" onload="if(this.width / this.height > 1161 / 708){
-                  record_size(this.height, this.width, this.width / 1161);
-                  this.height = this.height * 1161 / this.width;
-                  this.width = 1161;
-                  cvd();
-                } else {
-                  record_size(this.height, this.width, this.height / 708);
-                  this.width = this.width * 708 / this.height;
-                  this.height = 708;
-                  cvd();
-              }") hidden>
+      	<img src =  "{{image}}" id = "image" onload="console.log('style onload');
+          if (!first_load) return false;
+          first_load = false;
+          if(this.width / this.height > 1161 / 708){
+            record_size(this.height, this.width, this.width / 1161);
+            this.height = this.height * 1161 / this.width;
+            this.width = 1161;
+            cvd();
+          } else {
+            record_size(this.height, this.width, this.height / 708);
+            this.width = this.width * 708 / this.height;
+            this.height = 708;
+            cvd();
+          }
+          img_h = style_image.height;
+          img_w = style_image.width;
+          $('#canvas').css('background-image', 'url(' + style_image.src + ')');
+          canvas_img = 'style_image';
+          $('#canvas').attr('height', img_h);
+          $('#canvas').attr('width', img_w);
+          $('#edit-btn').prop('hidden', false);
+          this.hidden = true;" hidden>
         <canvas id="canvas" class="image"></canvas>
         <!--
         <video src = "{{video}}" autoplay = "autoplay" id = "vivideo" style = "object-fit:fill">

@@ -46,7 +46,7 @@ if platform.system() == "Linux":
 else:
     DEBUG_EDIT = True
 """
-DEBUG_EDIT = False
+DEBUG_EDIT = True
 
 def homepage(request):
     #myapp = app.GlamorousApp()

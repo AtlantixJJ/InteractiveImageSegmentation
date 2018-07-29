@@ -413,6 +413,7 @@ function init() {
   style_image = document.getElementById('image');
   canvas_img = 'style_image';
   first_load = true;
+  style_image.hidden = false;
   style_image.onload = function() {
     console.log("style onload");
     if (!first_load) return false;
@@ -435,7 +436,7 @@ function init() {
     $('#canvas').attr('height', img_h);
     $('#canvas').attr('width', img_w);
     $("#edit-btn").prop("hidden", false);
-    $('image').prop("hidden", true);
+    this.hidden = true;
   };
 
   $("#label-btn").prop("hidden", true);
