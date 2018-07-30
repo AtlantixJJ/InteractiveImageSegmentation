@@ -8,18 +8,25 @@
         <script src="https://cdn.bootcss.com/noUiSlider/11.1.0/nouislider.min.js"></script>
         <link href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.bootcss.com/noUiSlider/11.1.0/nouislider.min.css" rel="stylesheet">
-        <link href="{% static 'css/style.css' %}" rel="stylesheet">
+        <link href=""{% static 'css/style.css' %}"" rel="stylesheet">
+        <link href=""{% static 'css/toastr.min.css' %}"" rel="stylesheet">
+        <!--
+          <link href="https://raw.githubusercontent.com/CodeSeven/toastr/master/build/toastr.min.css" rel="stylesheet">
+          <script src="https://raw.githubusercontent.com/CodeSeven/toastr/master/build/toastr.min.js"></script>
+        -->
+        <script src="{% static 'lib/toastr.min.js' %}"></script>
         <script src="{% static 'lib/spin.min.js' %}"></script>
         <script src="{% static 'js/graph.js' %}"></script>
         <script src="{% static 'js/draw.js' %}"></script>
         <script src="{% static 'js/control.js' %}"></script>
         <script>first_load = true;</script>
-        <title>Painting</title>
+        <title>Aesthetic Painting</title>
     </head>
    <body style = "background-image:url(/static/image/background.png);background-size:cover";>
 
    <div style = "background-color:#F2F2F2;width:1460px;height:760px;margin:0 auto;margin-top:70px;box-shadow:3px 3px 3px #666">
       <div style = "margin-top:26px;margin-left:56px;height:708px;width:1161px;float:left;">
+        <div id="spin"></div>
       	<img src =  "{{image}}" id = "image" onload="first_load = false;
           if(this.width / this.height > 1161 / 708){
             record_size(this.height, this.width, this.width / 1161);
@@ -36,9 +43,7 @@
           img_w = this.width;
           this.hidden = true;" hidden>
         <canvas id="canvas" class="image"></canvas>
-        <!--
-        <video src = "{{video}}" autoplay = "autoplay" id = "vivideo" style = "object-fit:fill">
-        -->
+        <video src = "{{video}}" autoplay muted id="vivideo" style = "object-fit:fill" onload="play_video();" hidden>
       </div>
       
       <div style = "float:left;width:222px;margin-left:-25px;margin-top:20px;height:500px;text-align:right">
@@ -50,7 +55,7 @@
             <p id = "style-word" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{style}}</p>
       </div>
 
-      <div border = "solid 2px #999">
+      <div style = "float:left;width:222px;margin-left:-25px;margin-top:20px;height:100px;text-align:right">
             <!--Atlantix-->
             <span id = "indicator2" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Indicator2</span>
             <span id = "indicator" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Indicator</span>
@@ -58,11 +63,13 @@
 
             <span id = "label-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Label object</span>
             <span id = "submit-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Submit</span>
-            <span id = "edit-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Edit</span>
-
+            <a id = "edit-btn" style = "font-family:'Times New Roman', Times, serif; font-size:24px;" hidden>Edit</a>
+            <p></p>
+            <!--
             <a id = "down-image-href" href = "{{image}}" download="{{image}}" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Download</a>
             <a id = "view-image-href" href = "{{image}}" target="_blank" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">View</a>
-            <a id = "back-href" href = /homepage style = "margin-left:152px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Back</a>
+            -->
+            <a id = "back-href" href = /homepage style = "font-family:'Times New Roman', Times, serif; font-size:24px;">Back</a>
       </div>
    </div>
 

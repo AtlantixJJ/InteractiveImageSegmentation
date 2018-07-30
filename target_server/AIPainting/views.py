@@ -46,7 +46,7 @@ if platform.system() == "Linux":
 else:
     DEBUG_EDIT = True
 """
-DEBUG_EDIT = False
+DEBUG_EDIT = True
 
 def homepage(request):
     #myapp = app.GlamorousApp()
@@ -60,7 +60,7 @@ def homepage(request):
             inp_img = Image.open("req_0_content.jpg")
             inp_style_img = api.get_stylization(inp_img)
             inp_style_img.save(open(osj(STATIC_DIR, "req_0_style.jpg"), "wb"), format="JPEG")
-            return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s" % ("plane", "req_0_content.jpg", "4", "sorrowful", 'req_0_style.jpg', 'req_0_draw.mp4'))
+            return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s" % ("plane", "req_0_content.jpg", "4", "sorrowful", 'req_0_style.jpg', 'req_0-oilpaint_video.mp4'))
         else:
             return render_to_response("AIPainting.html")
     else:
