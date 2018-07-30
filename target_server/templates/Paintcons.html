@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-    <head>{% load static %}
+    <head>{% load static %}{% load staticfiles %}
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
         <script src="https://cdn.bootcss.com/popper.js/1.14.2/umd/popper.min.js"></script>
@@ -8,8 +8,8 @@
         <script src="https://cdn.bootcss.com/noUiSlider/11.1.0/nouislider.min.js"></script>
         <link href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.bootcss.com/noUiSlider/11.1.0/nouislider.min.css" rel="stylesheet">
-        <link href=""{% static 'css/style.css' %}"" rel="stylesheet">
-        <link href=""{% static 'css/toastr.min.css' %}"" rel="stylesheet">
+        <link href="{% static 'css/style.css' %}" rel="stylesheet">
+        <link href="{% static 'css/toastr.min.css' %}" rel="stylesheet">
         <!--
           <link href="https://raw.githubusercontent.com/CodeSeven/toastr/master/build/toastr.min.css" rel="stylesheet">
           <script src="https://raw.githubusercontent.com/CodeSeven/toastr/master/build/toastr.min.js"></script>
@@ -25,7 +25,7 @@
    <body style = "background-image:url(/static/image/background.png);background-size:cover";>
 
    <div style = "background-color:#F2F2F2;width:1460px;height:760px;margin:0 auto;margin-top:70px;box-shadow:3px 3px 3px #666">
-      <div style = "margin-top:26px;margin-left:56px;height:708px;width:1161px;float:left;">
+      <div style = "margin-top:26px;margin-left:26px;height:708px;width:1161px;float:left;">
         <div id="spin"></div>
       	<img src =  "{{image}}" id = "image" onload="first_load = false;
           if(this.width / this.height > 1161 / 708){
@@ -46,7 +46,7 @@
         <video src = "{{video}}" autoplay muted id="vivideo" style = "object-fit:fill" onload="play_video();" hidden>
       </div>
       
-      <div style = "float:left;width:222px;margin-left:-25px;margin-top:20px;height:500px;text-align:right">
+      <div style = "float:left;width:222px;margin-left:26px;margin-top:20px;height:500px;text-align:right">
       		<p style = "font-family:'Times New Roman', Times, serif; font-size:24px;">Content</p>
             <p id = "description" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{description}}</p>
             <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Adjective</p>
@@ -55,7 +55,7 @@
             <p id = "style-word" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{style}}</p>
       </div>
 
-      <div style = "float:left;width:222px;margin-left:-25px;margin-top:20px;height:100px;text-align:right">
+      <div style = "float:left;width:222px;margin-left:26px;margin-top:20px;height:100px;text-align:right">
             <!--Atlantix-->
 
             <a id = "submit-btn" href="#" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Submit</a>

@@ -94,9 +94,9 @@ def get_segmentation(image, rect, user_mask=None):
     seg_img, mask, bbox = segmentor.segment(rect, user_mask)
 
     if bbox is not None:
-        #inp_img = fromarray(cv.inpaint(image, segmentor.mask, 3, cv.INPAINT_TELEA)
         print("=> Start inpainting")
-        inp_img = inpaintor.inpaint(segmentor.image, segmentor.mask)
+        inp_img = fromarray(cv.inpaint(image, segmentor.mask, 3, cv.INPAINT_TELEA))
+        #inp_img = inpaintor.inpaint(segmentor.image, segmentor.mask)
         print("=> Inpainting successful")
         seg_img = seg_img[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
         seg_img = fromarray(seg_img)
@@ -108,3 +108,8 @@ def get_segmentation(image, rect, user_mask=None):
 
 def get_stylization(image):
     return fromarray(stylizor.stylize_single(image))
+
+def seamlessClone(seg_image_np, seg_mask_np, inp_content_image, p_i):
+    dst = inp_content_image.copy()
+    cv.seamlessClone(src=seg_image_np, dst=dst, mask=seg_mask_np, p=p_i, blend=inp_content_image, flags=cv.NORMAL_CLONE)
+    return fromarray(dst)

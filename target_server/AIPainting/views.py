@@ -179,6 +179,15 @@ def edit_done(request):
         seg_image_np = np.asarray(seg_image, dtype="uint8")
         bg_x, ed_x = seg_st[1], seg_st[1] + seg_image_np.shape[0]
         bg_y, ed_y = seg_st[0], seg_st[0] + seg_image_np.shape[1]
+
+        content_image = Image.open(osj(STATIC_DIR, "req_%d_content.png" % cur_id))
+        content_image_np=np.asarray(content_image)
+
+        mask = Image.open(osj(STATIC_DIR, "req_%d_mask.png" % cur_id))
+        mask_np = np.asarray(mask)
+        
+        fused_content_image = api.seamlessClone(content_image_np, mask_np, inp_content_image, (bg_x, bg_y))
+
         if ed_x > seg_mask_np.shape[0]:
             ed_x = seg_mask_np.shape[0]
         if ed_y > seg_mask_np.shape[1]:
@@ -195,8 +204,10 @@ def edit_done(request):
         print(bg_x, ed_x, bg_y, ed_y)
 
         seg_mask_np[bg_x:ed_x, bg_y:ed_y] = seg_image_np[stc_x:len_x, stc_y:len_y]
-        seg_mask = fromarray(seg_mask_np)
-        fused_content_image = Image.alpha_composite(inp_content_image, seg_mask).convert("RGB")
+        dst = seg_image_np.copy()
+        #seg_mask = fromarray(seg_mask_np)
+        #fused_content_image = Image.alpha_composite(inp_content_image, seg_mask).convert("RGB")
+        
 
         ### [MERGE] change this to ordinary stylization, with video generation
         if DEBUG_EDIT:

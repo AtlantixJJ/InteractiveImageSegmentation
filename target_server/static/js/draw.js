@@ -196,7 +196,8 @@ function setSegmentationImage(data) {
   
   // line width and color
   console.log("set segmentation image");
-
+  toastr.info('You can drag the object to another place');
+  toastr.info('Or you can refine the object by drawing simple lines');
   label_type = "object";
   //$("#indicator2").prop("hidden", false);
   $("#label-btn").prop("hidden", false);
@@ -484,6 +485,7 @@ function onEdit() {
     document.getElementById("edit-btn").textContent = "Submit";
     $("#edit-btn").hide().show(0);
 
+    toastr.info('Draw a box to select an object');
     graph.setLineWidth(5);
     graph.setCurrentColor("#000000");
     ratio = get_ratio();
