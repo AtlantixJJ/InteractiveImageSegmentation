@@ -301,8 +301,8 @@ function onClear() {
 
   graph.setLineWidth(5);
 
-  $("#down-image-href").prop("hidden", true);
-  $("#view-image-href").prop("hidden", true);
+  //$("#down-image-href").prop("hidden", true);
+  //$("#view-image-href").prop("hidden", true);
   $("#indicator").prop("hidden", false);
   $("#clear-btn").prop("hidden", false);
 
@@ -460,7 +460,7 @@ function init() {
     canvas_img = 'style_image';
     $('#canvas').attr('height', img_h);
     $('#canvas').attr('width', img_w);
-    $('#edit-btn').prop('hidden', false);
+    //$('#edit-btn').prop('hidden', false);
   };
 
   if (canvas_img == '') {
@@ -468,17 +468,18 @@ function init() {
     canvas_img = 'style_image';
     $('#canvas').attr('height', img_h);
     $('#canvas').attr('width', img_w);
-    $('#edit-btn').prop('hidden', false);
+    //$('#edit-btn').prop('hidden', false);
   }
 }
 
 function onEdit() {
   console.log("in start edit");
   if (ctrl_state == "preview") {
-    $("#down-image-href").prop("hidden", true);
-    $("#view-image-href").prop("hidden", true);
+    //$("#down-image-href").prop("hidden", true);
+    //$("#view-image-href").prop("hidden", true);
+    $("#back-href").prop("hidden", true);
     $("#indicator").prop("hidden", false);
-    $("#clear-btn").prop("hidden", false);
+    //$("#clear-btn").prop("hidden", false);
     document.getElementById("indicator").textContent = "Draw a box";
     document.getElementById("edit-btn").textContent = "Submit";
     $("#edit-btn").hide().show(0);
@@ -510,15 +511,18 @@ function onEdit() {
     resume_dragging = false;
     canvas_img = "";
 
-    $("#down-image-href").prop("hidden", false);
-    $("#view-image-href").prop("hidden", false);
+    //$("#down-image-href").prop("hidden", false);
+    //$("#view-image-href").prop("hidden", false);
+    $("#back-href").prop("hidden", false);
     $("#indicator").prop("hidden", true);
-    $("#clear-btn").prop("hidden", true);
+    //$("#clear-btn").prop("hidden", true);
     document.getElementById("indicator").textContent = "Indicator";
     document.getElementById("edit-btn").textContent = "Edit";
     $("#edit-btn").hide().show(0);
     $("#label-btn").prop("hidden", true);
     $('#submit-btn').prop("hidden", true);
+
+    var vid = document.getElementById('vivideo');
   }
 }
 
@@ -538,6 +542,6 @@ $(document).ready(function () {
 
   $('#edit-btn').click(onEdit);
   $('#submit-btn').click(onSubmit);
-  $('#clear-btn').click(onClear);
+  //$('#clear-btn').click(onClear);
   $('#label-btn').click(onChangeLabel);
 });
