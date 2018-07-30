@@ -20,9 +20,7 @@
 
    <div style = "background-color:#F2F2F2;width:1460px;height:760px;margin:0 auto;margin-top:70px;box-shadow:3px 3px 3px #666">
       <div style = "margin-top:26px;margin-left:56px;height:708px;width:1161px;float:left;">
-      	<img src =  "{{image}}" id = "image" onload="console.log('style onload');
-          if (!first_load) return false;
-          first_load = false;
+      	<img src =  "{{image}}" id = "image" onload="first_load = false;
           if(this.width / this.height > 1161 / 708){
             record_size(this.height, this.width, this.width / 1161);
             this.height = this.height * 1161 / this.width;
@@ -34,13 +32,8 @@
             this.height = 708;
             cvd();
           }
-          img_h = style_image.height;
-          img_w = style_image.width;
-          $('#canvas').css('background-image', 'url(' + style_image.src + ')');
-          canvas_img = 'style_image';
-          $('#canvas').attr('height', img_h);
-          $('#canvas').attr('width', img_w);
-          $('#edit-btn').prop('hidden', false);
+          img_h = this.height;
+          img_w = this.width;
           this.hidden = true;" hidden>
         <canvas id="canvas" class="image"></canvas>
         <!--
@@ -59,12 +52,12 @@
 
       <div border = "solid 2px #999">
             <!--Atlantix-->
-            <span id = "indicator2" style = "font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Indicator2</span>
+            <span id = "indicator2" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Indicator2</span>
             <span id = "indicator" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Indicator</span>
             <span id = "clear-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Clear</span>
 
             <span id = "label-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Label object</span>
-
+            <span id = "submit-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Submit</span>
             <span id = "edit-btn" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Edit</span>
 
             <a id = "down-image-href" href = "{{image}}" download="{{image}}" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Download</a>

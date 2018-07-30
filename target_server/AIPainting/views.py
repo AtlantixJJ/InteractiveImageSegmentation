@@ -46,7 +46,7 @@ if platform.system() == "Linux":
 else:
     DEBUG_EDIT = True
 """
-DEBUG_EDIT = True
+DEBUG_EDIT = False
 
 def homepage(request):
     #myapp = app.GlamorousApp()
@@ -57,6 +57,9 @@ def homepage(request):
 
     if(description == None):
         if DEBUG_EDIT:
+            inp_img = Image.open("req_0_content.jpg")
+            inp_style_img = api.get_stylization(inp_img)
+            inp_style_img.save(open(osj(STATIC_DIR, "req_0_style.jpg"), "wb"), format="JPEG")
             return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s" % ("plane", "req_0_content.jpg", "4", "sorrowful", 'req_0_style.jpg', 'req_0_draw.mp4'))
         else:
             return render_to_response("AIPainting.html")
@@ -72,10 +75,12 @@ def homepage(request):
         
         if not DEBUG_EDIT:
             os.system('./testapp %s %d %s %s' % (description, style, adj, 'req_'+str(id)))
-            os.system('cp req_%d_origin.jpg req_%d_content.jpg' % (id, id))
-            inp_img = Image.open("req_%d_content.jpg" % id)
-            inp_style_img = api.get_stylization(inp_img)
-            inp_style_img.save(open(osj(STATIC_DIR, "req_%d_style.jpg" % id), "wb"), format="JPEG")
+            content_image = Image.open("req_%d-src.jpg" % id)
+            print(content_image.size)
+            style_image = Image.open("req_%d.jpg" % id)
+            os.system("cp req_%d.jpg req_%d_style.jpg" % (id, id))
+            print(style_image.size)
+            content_image.resize(style_image.size).save("req_%d_content.jpg" % id)
         '''def call_server():
             os.system('./server %d /mnt/share/ky/image_data' % portno)
         thread.start_new_thread(call_server, ())
@@ -135,7 +140,14 @@ def consequence(request):
             'video_name': request.GET.get("video"),
             'content':content, 'image':image, 'video':video
             })
-            
+
+def get_style_id(style):
+    stylelist = ['Abstract painting','Post-impression','Neo-impression','Chinese ink painting','Suprematism','Impressionism']
+    for i in range(len(stylelist)):
+        if stylelist[i] == style:
+            return i
+    return 0
+
 @csrf_exempt
 def edit_done(request):
     if request.method == "GET":
@@ -148,6 +160,8 @@ def edit_done(request):
         video       = str(form_data.getlist("video")      [0])
         seg_st      =     form_data.getlist("seg_st[]")
         seg_st = [int(item) for item in seg_st]
+
+        style_id = get_style_id(style)
         
         rc = form_data.getlist('rect[]')
         rc = [int(float(item)) for item in rc]
@@ -178,7 +192,13 @@ def edit_done(request):
         fused_content_image = Image.alpha_composite(inp_content_image, seg_mask).convert("RGB")
 
         ### [MERGE] change this to ordinary stylization, with video generation
-        fused_style_image = api.get_stylization(fused_content_image)
+        if DEBUG_EDIT:
+            fused_style_image = api.get_stylization(fused_content_image)
+        else:
+            file_name = osj(STATIC_DIR, "req_%d_content.jpg" % cur_id)
+            fused_content_image.save(open(file_name, "wb"), format="JPEG")
+            os.system('./testapp %s %d %s %s' % (file_name, style_id, adj, 'req_'+str(cur_id)))
+            fused_style_image = Image.open("req_%d.jpg" % cur_id)
         ###
 
         fused_content_image.save(open(osj(STATIC_DIR, "req_%d_content.jpg" % cur_id), "wb"), format="JPEG")
@@ -208,7 +228,10 @@ def edit(request):
         adj         = str(form_data.getlist("adj")        [0])
         image       = str(form_data.getlist("image")      [0])
         video       = str(form_data.getlist("video")      [0])
+        
+        style_id = get_style_id(style)
 
+        print("=> Collect user sketch")
         try:
             sketch = b64decode(form_data['sketch'].split(',')[1])
         except Exception as e:
@@ -225,8 +248,8 @@ def edit(request):
         #rect = [rect[1], rect[0], rect[3], rect[2]]
 
         content_image = Image.open(osj(STATIC_DIR, content))
-        print("Content image size: ", content_image.size)
-        print("User rect: ", rect)
+        print("=> Content image size: ", content_image.size)
+        print("=> User rect: ", rect)
 
         user_mask = None
         if sketch is not None:
@@ -246,11 +269,20 @@ def edit(request):
         style_image_np = np.asarray(style_image, dtype="uint8")[:, :, :3]
 
         # segment image; inpainted image; segmentation mask; bounding box
-        print("Segmentation")
+        print("=> Do segmentation")
         [seg_img, inp_img, seg_mask, bbox] = api.get_segmentation(content_image_np, rect, user_mask)
-        inp_style_img = api.get_stylization(inp_img)
-        print("Segmentation done")
-        print("Segment size: ", seg_img.size)
+        print("=> Segmentation done, size: ", seg_img.size)
+        file_name = osj(STATIC_DIR, "req_%d_inpcontent.jpg" % cur_id)
+        inp_img.save(open(      file_name, "wb"), format="JPEG")
+        seg_img.save(open(      osj(STATIC_DIR, "req_%d_seg.png"        % cur_id), "wb"), format="PNG")
+        seg_mask.save(open(     osj(STATIC_DIR, "req_%d_mask.png"       % cur_id), "wb"), format="PNG")
+
+        if DEBUG_EDIT:
+            inp_style_img = api.get_stylization(inp_img)
+        else:
+            os.system('./testapp %s %d %s %s' % (file_name, style_id, adj, 'req_fusedstyle_'+str(cur_id)))
+            inp_style_img = Image.open("req_fusedstyle_%d.jpg" % cur_id)
+
         print(inp_img.size, seg_mask.size, inp_style_img.size, bbox)
         
         if bbox is not None:
@@ -265,12 +297,11 @@ def edit(request):
         
         fused_img = Image.composite(inp_style_img.point(lambda x:x*1.5), inp_style_img.point(lambda x:x/2), seg_mask)
 
-        inp_img.save(open(      osj(STATIC_DIR, "req_%d_inpcontent.jpg" % cur_id), "wb"), format="JPEG")
-        seg_mask.save(open(     osj(STATIC_DIR, "req_%d_mask.png"       % cur_id), "wb"), format="PNG")
+
         inp_style_img.save(open(osj(STATIC_DIR, "req_%d_inpstyle.jpg"   % cur_id), "wb"), format="JPEG")
         fused_img.save(open(    osj(STATIC_DIR, "req_%d_fused.jpg"      % cur_id), "wb"), format="JPEG")
         seg_style_img.save(open(osj(STATIC_DIR, "req_%d_segstyle.png"   % cur_id), "wb"), format="PNG")
-        seg_img.save(open(      osj(STATIC_DIR, "req_%d_seg.png"        % cur_id), "wb"), format="PNG")
+
 
         image = osj('static', form_data.getlist("image")[0])
         video = osj('static', form_data.getlist("video")[0])

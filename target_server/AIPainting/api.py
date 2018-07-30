@@ -18,10 +18,11 @@ else:
     DEBUG_EDIT = True
     #export CUDA_VISIBLE_DEVICES=0
 """
-DEBUG_EDIT = True
-from ns.api import NeuralStyle
-### [MERGE] comment out this line to use our own stylization
-stylizor = NeuralStyle(osj("..", "..", "models", "feathers.ckpt-done"))
+DEBUG_EDIT = False
+if DEBUG_EDIT:
+    from ns.api import NeuralStyle
+    ### [MERGE] comment out this line to use our own stylization
+    stylizor = NeuralStyle(osj("..", "..", "models", "feathers.ckpt-done"))
 
 class InteractiveSegmentation(object):
     def __init__(self, image=None):
@@ -90,13 +91,14 @@ def get_segmentation(image, rect, user_mask=None):
 
     if bbox is not None:
         #inp_img = fromarray(cv.inpaint(image, segmentor.mask, 3, cv.INPAINT_TELEA)
+        print("=> Start inpainting")
         inp_img = inpaintor.inpaint(segmentor.image, segmentor.mask)
+        print("=> Inpainting successful")
         seg_img = seg_img[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2], :]
-        print(seg_img.shape)
         seg_img = fromarray(seg_img)
         seg_img.putalpha(fromarray(mask[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0] + bbox[2]]))
     else:
-        inp_img = fromarray(seg_img)
+        inp_img = fromarray(image)
         seg_img = fromarray(seg_img)
     return seg_img, inp_img, fromarray(mask), bbox
 

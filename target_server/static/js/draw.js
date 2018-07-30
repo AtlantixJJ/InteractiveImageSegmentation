@@ -193,8 +193,23 @@ function setSegmentationImage(data) {
     jdata = JSON.parse(data);
     if (jdata.ok == 1) ok = 1;
   }
+  
+  // line width and color
+  console.log("set segmentation image");
+
+  label_type = "object";
+  //$("#indicator2").prop("hidden", false);
+  $("#label-btn").prop("hidden", false);
+  $("#submit-btn").prop("hidden", false);
+  document.getElementById('indicator').textContent = "Refine";
+  document.getElementById('label-btn').textContent = "Background";
+  document.getElementById('edit-btn').textContent = "Done";
+  $("#edit-btn").hide().show(0);
+  ctrl_state = "finetuning";
+  resume_labeling = true;
+  pixel_labeling = false;
+
   if (!ok) {
-    document.getElementById("indicator").textContent = "Edit failed, please label pixel";
     spinner.spin();
     return false;
   }
@@ -203,13 +218,13 @@ function setSegmentationImage(data) {
   seg_style_img = image_from_static_url(jdata.seg_style);
   seg_style_img.onload = function(event) {
     drag_img = seg_style_img;
-    console.log(drag_img);
     drag_img.width = Math.ceil(drag_img.width / ratio);
     drag_img.height = Math.ceil(drag_img.height / ratio);
-    console.log(drag_img);
     seg_st.x = Math.floor(jdata.st_y / ratio);
     seg_st.y = Math.floor(jdata.st_x / ratio);
     graph.drawImage(seg_style_img, seg_st.x, seg_st.y);
+    graph.setLineWidth(5);
+    graph.setCurrentColor("#D2691E");
   }
   mask            = image_from_static_url(jdata.mask_image);
   inp_style_image = image_from_static_url(jdata.inp_image);
@@ -222,13 +237,13 @@ function setSegmentationImage(data) {
     canvas_img = 'fused_image';
     // set flags to dragging
     graph.has_result = true;
-    graph.clear();
     dragging = true;
     resume_dragging = false;
   }
+  console.log(graph.ctx.lineWidth);
   // modify indicator
-  document.getElementById("indicator").textContent = "Drag around";
-  document.getElementById("edit-btn").textContent = "Done";
+  // document.getElementById("indicator").textContent = "Drag around";
+  // document.getElementById("edit-btn").textContent = "Done";
   spinner.spin();
 }
 
@@ -330,8 +345,6 @@ function onSubmit() {
       formData.sketch = null;
       $.get("edit", formData, setSegmentationImage);
     }
-
-    
   }
 }
 
@@ -365,18 +378,18 @@ function onChangeLabel() {
   if (label_type == "object") {
     label_type = "background";
     document.getElementById('label-btn').textContent = "Foreground";
-    document.getElementById('indicator2').textContent = "Label the background";
-    document.getElementById('label-btn').style.color = "#D2691E";
-    document.getElementById('indicator').style.color = "#008B8B";
+    //document.getElementById('indicator2').textContent = "Background";
+    //document.getElementById('label-btn').style.color = "#D2691E";
+    //document.getElementById('indicator').style.color = "#008B8B";
     $("#label-btn").hide().show(0);
     $("#indicator").hide().show(0);
     graph.setCurrentColor("#008B8B");
   } else if (label_type == "background") {
     label_type = "object";
     document.getElementById('label-btn').textContent = "Background";
-    document.getElementById('indicator2').textContent = "Label the object";
-    document.getElementById('label-btn').style.color = "#008B8B";
-    document.getElementById('indicator').style.color = "#D2691E";
+    //document.getElementById('indicator2').textContent = "Label object";
+    //document.getElementById('label-btn').style.color = "#008B8B";
+    //document.getElementById('indicator').style.color = "#D2691E";
     $("#label-btn").hide().show(0);
     $("#indicator").hide().show(0);
     graph.setCurrentColor("#D2691E");
@@ -410,13 +423,13 @@ function init() {
   video_name  = document.getElementById('video-name').textContent;
   adj_word    = document.getElementById('adj-word').textContent;
   style_word  = document.getElementById('style-word').textContent;
-  style_image = document.getElementById('image');
-  canvas_img = 'style_image';
+
+  canvas_img = '';
   first_load = true;
-  style_image.hidden = false;
-  style_image.onload = function() {
-    console.log("style onload");
-    if (!first_load) return false;
+  style_image = document.getElementById('image');
+  style_image.onload = function () {
+    $("#label-btn").prop("hidden", true);
+    ctrl_state = "preview";
     first_load = false;
     if(this.width / this.height > 1161 / 708){
       record_size(this.height, this.width, this.width / 1161);
@@ -429,19 +442,16 @@ function init() {
       this.height = 708;
       cvd();
     }
-    img_h = style_image.height;
-    img_w = style_image.width;
+    img_h = this.height;
+    img_w = this.width;
+    style_image = this;
+    this.hidden = true;
     $('#canvas').css('background-image', 'url(' + style_image.src + ')');
     canvas_img = 'style_image';
     $('#canvas').attr('height', img_h);
     $('#canvas').attr('width', img_w);
-    $("#edit-btn").prop("hidden", false);
-    this.hidden = true;
+    $('#edit-btn').prop('hidden', false);
   };
-
-  $("#label-btn").prop("hidden", true);
-
-  ctrl_state = "preview";
 }
 
 function onEdit() {
@@ -461,28 +471,16 @@ function onEdit() {
     ctrl_state = "editing";
   } else if (ctrl_state == "editing") {
     onSubmit();
-    ctrl_state = "finetuning";
-
-    // line width and color
     graph.setLineWidth(5);
     graph.setCurrentColor("#D2691E");
-    label_type = "object";
-    $("#indicator2").prop("hidden", false);
-    $("#label-btn").prop("hidden", false);
-    document.getElementById('label-btn').textContent = "Background";
-    document.getElementById('indicator2').textContent = "Label the object";
-    document.getElementById('label-btn').style.color = "#008B8B";
-    document.getElementById('indicator2').style.color = "#D2691E";
-    document.getElementById('edit-btn').textContent = "Done";
-    $("#edit-btn").hide().show(0);
-
-
+    
     ctrl_state = "finetuning";
-    resume_labeling = true;
-    pixel_labeling = false;
+    //document.getElementById('indicator2').textContent = "Foreground";
+    //document.getElementById('label-btn').style.color = "#008B8B";
+    //document.getElementById('indicator2').style.color = "#D2691E";
   } else if (ctrl_state == "finetuning") {
-    onSubmit();
-    $("#indicator2").prop("hidden", true);
+    //$("#indicator2").prop("hidden", true);
+    $("#label-btn").prop("hidden", true);
     ctrl_state = "finish";
     resume_labeling = false;
     pixel_labeling = false;
@@ -520,6 +518,7 @@ $(document).ready(function () {
   canvas.addEventListener('touchcancel', onMouseUp, false);
 
   $('#edit-btn').click(onEdit);
+  $('#submit-btn').click(onSubmit);
   $('#clear-btn').click(onClear);
   $('#label-btn').click(onChangeLabel);
 });
