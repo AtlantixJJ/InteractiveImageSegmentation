@@ -65,7 +65,7 @@ def homepage(request):
             return render_to_response("AIPainting.html")
     else:
         global reqid
-        (id,reqid)=(reqid+1,reqid+1)
+        id, reqid = reqid+1, reqid+1
 
         description = "\'" + str(description) + "\'"
         style = int(str(style))
