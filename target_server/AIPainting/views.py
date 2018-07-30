@@ -183,11 +183,18 @@ def edit_done(request):
             ed_x = seg_mask_np.shape[0]
         if ed_y > seg_mask_np.shape[1]:
             ed_y = seg_mask_np.shape[1]
+        stc_x = stc_y = 0
+        if bg_x < 0:
+            stc_x = -bg_x
+            bg_x = 0
+        if bg_y < 0:
+            stc_y = - bg_y
+            bg_y = 0
         len_x = ed_x - bg_x
         len_y = ed_y - bg_y
         print(bg_x, ed_x, bg_y, ed_y)
 
-        seg_mask_np[bg_x:ed_x, bg_y:ed_y] = seg_image_np[:len_x, :len_y]
+        seg_mask_np[bg_x:ed_x, bg_y:ed_y] = seg_image_np[stc_x:len_x, stc_y:len_y]
         seg_mask = fromarray(seg_mask_np)
         fused_content_image = Image.alpha_composite(inp_content_image, seg_mask).convert("RGB")
 
@@ -248,8 +255,6 @@ def edit(request):
         #rect = [rect[1], rect[0], rect[3], rect[2]]
 
         content_image = Image.open(osj(STATIC_DIR, content))
-        print("=> Content image size: ", content_image.size)
-        print("=> User rect: ", rect)
 
         user_mask = None
         if sketch is not None:
@@ -271,7 +276,7 @@ def edit(request):
         # segment image; inpainted image; segmentation mask; bounding box
         print("=> Do segmentation")
         [seg_img, inp_img, seg_mask, bbox] = api.get_segmentation(content_image_np, rect, user_mask)
-        print("=> Segmentation done, size: ", seg_img.size)
+
         file_name = osj(STATIC_DIR, "req_%d_inpcontent.jpg" % cur_id)
         inp_img.save(open(      file_name, "wb"), format="JPEG")
         seg_img.save(open(      osj(STATIC_DIR, "req_%d_seg.png"        % cur_id), "wb"), format="PNG")
@@ -282,7 +287,9 @@ def edit(request):
         else:
             os.system('./testapp %s %d %s %s' % (file_name, style_id, adj, 'req_fusedstyle_'+str(cur_id)))
             inp_style_img = Image.open("req_fusedstyle_%d.jpg" % cur_id)
-
+        print("=> Content image size: ", content_image.size)
+        print("=> User rect: ", rect)
+        print("=> Segmentation done, size: ", seg_img.size)
         print(inp_img.size, seg_mask.size, inp_style_img.size, bbox)
         
         if bbox is not None:

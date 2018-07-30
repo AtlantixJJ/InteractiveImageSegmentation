@@ -54,6 +54,10 @@ class InteractiveSegmentation(object):
         else:
             cv.grabCut(self.image, self.raw_mask, tuple(rect), self.bgdmodel,self.fgdmodel,1,cv.GC_INIT_WITH_MASK)
         self.mask = np.where((self.raw_mask==1) + (self.raw_mask==3), 255, 0).astype('uint8')
+        self.rect_mask = np.zeros_like(self.mask)
+        self.rect_mask[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2]].fill(1)
+        print("Show", self.mask.max(), self.rect_mask.max(), (self.mask * self.rect_mask).max())
+        self.mask *= self.rect_mask
         output = cv.bitwise_and(self.image,self.image,mask=self.mask)
         seg_img = output
         seg_mask = self.mask
@@ -79,7 +83,7 @@ class InteractiveSegmentation(object):
         """
         Inpaint image by original mask
         """
-        assert(image.size == self.mask.size, "inpaint image: image and mask size inconsistent")
+        assert image.size == self.mask.size, "inpaint image: image and mask size inconsistent"
         return cv.inpaint(image, self.mask, 3, cv.INPAINT_TELEA)
 
 segmentor = InteractiveSegmentation()

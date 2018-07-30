@@ -204,6 +204,8 @@ function setSegmentationImage(data) {
   document.getElementById('indicator').textContent = "Refine";
   document.getElementById('label-btn').textContent = "Background";
   document.getElementById('edit-btn').textContent = "Done";
+  graph.setLineWidth(5);
+  graph.setCurrentColor("#D2691E");
   $("#edit-btn").hide().show(0);
   ctrl_state = "finetuning";
   resume_labeling = true;
@@ -297,6 +299,8 @@ function onClear() {
   $('#canvas').attr('height', img_h);
   $('#canvas').attr('width', img_w);
 
+  graph.setLineWidth(5);
+
   $("#down-image-href").prop("hidden", true);
   $("#view-image-href").prop("hidden", true);
   $("#indicator").prop("hidden", false);
@@ -383,6 +387,7 @@ function onChangeLabel() {
     //document.getElementById('indicator').style.color = "#008B8B";
     $("#label-btn").hide().show(0);
     $("#indicator").hide().show(0);
+    graph.setLineWidth(5);
     graph.setCurrentColor("#008B8B");
   } else if (label_type == "background") {
     label_type = "object";
@@ -392,6 +397,7 @@ function onChangeLabel() {
     //document.getElementById('indicator').style.color = "#D2691E";
     $("#label-btn").hide().show(0);
     $("#indicator").hide().show(0);
+    graph.setLineWidth(5);
     graph.setCurrentColor("#D2691E");
   }
 }
@@ -427,9 +433,13 @@ function init() {
   canvas_img = '';
   first_load = true;
   style_image = document.getElementById('image');
+  $("#label-btn").prop("hidden", true);
+  ctrl_state = "preview";
+
   style_image.onload = function () {
-    $("#label-btn").prop("hidden", true);
-    ctrl_state = "preview";
+    console.log("style image onload");
+    if (!first_load) return;
+    console.log("style image load");
     first_load = false;
     if(this.width / this.height > 1161 / 708){
       record_size(this.height, this.width, this.width / 1161);
@@ -452,6 +462,14 @@ function init() {
     $('#canvas').attr('width', img_w);
     $('#edit-btn').prop('hidden', false);
   };
+
+  if (canvas_img == '') {
+    $('#canvas').css('background-image', 'url(' + style_image.src + ')');
+    canvas_img = 'style_image';
+    $('#canvas').attr('height', img_h);
+    $('#canvas').attr('width', img_w);
+    $('#edit-btn').prop('hidden', false);
+  }
 }
 
 function onEdit() {
@@ -500,6 +518,7 @@ function onEdit() {
     document.getElementById("edit-btn").textContent = "Edit";
     $("#edit-btn").hide().show(0);
     $("#label-btn").prop("hidden", true);
+    $('#submit-btn').prop("hidden", true);
   }
 }
 
