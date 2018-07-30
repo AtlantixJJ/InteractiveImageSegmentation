@@ -201,8 +201,8 @@ function setSegmentationImage(data) {
   //$("#indicator2").prop("hidden", false);
   $("#label-btn").prop("hidden", false);
   $("#submit-btn").prop("hidden", false);
-  document.getElementById('indicator').textContent = "Refine";
-  document.getElementById('label-btn').textContent = "Background";
+  //document.getElementById('indicator').textContent = "Refine";
+  //document.getElementById('label-btn').textContent = "Background";
   document.getElementById('edit-btn').textContent = "Done";
   graph.setLineWidth(5);
   graph.setCurrentColor("#D2691E");
@@ -303,11 +303,11 @@ function onClear() {
 
   //$("#down-image-href").prop("hidden", true);
   //$("#view-image-href").prop("hidden", true);
-  $("#indicator").prop("hidden", false);
+  //$("#indicator").prop("hidden", false);
   $("#clear-btn").prop("hidden", false);
 
   if (ctrl_state == "finish" || ctrl_state == "editing") {
-    document.getElementById("indicator").textContent = "Draw a box";
+    //document.getElementById("indicator").textContent = "Draw a box";
     document.getElementById("edit-btn").textContent = "Submit";
     $("#edit-btn").hide().show(0);
     ctrl_state = "editing";
@@ -386,7 +386,7 @@ function onChangeLabel() {
     //document.getElementById('label-btn').style.color = "#D2691E";
     //document.getElementById('indicator').style.color = "#008B8B";
     $("#label-btn").hide().show(0);
-    $("#indicator").hide().show(0);
+    //$("#indicator").hide().show(0);
     graph.setLineWidth(5);
     graph.setCurrentColor("#008B8B");
   } else if (label_type == "background") {
@@ -478,9 +478,9 @@ function onEdit() {
     //$("#down-image-href").prop("hidden", true);
     //$("#view-image-href").prop("hidden", true);
     $("#back-href").prop("hidden", true);
-    $("#indicator").prop("hidden", false);
+    //$("#indicator").prop("hidden", false);
     //$("#clear-btn").prop("hidden", false);
-    document.getElementById("indicator").textContent = "Draw a box";
+    //document.getElementById("indicator").textContent = "Draw a box";
     document.getElementById("edit-btn").textContent = "Submit";
     $("#edit-btn").hide().show(0);
 
@@ -514,9 +514,9 @@ function onEdit() {
     //$("#down-image-href").prop("hidden", false);
     //$("#view-image-href").prop("hidden", false);
     $("#back-href").prop("hidden", false);
-    $("#indicator").prop("hidden", true);
+    //$("#indicator").prop("hidden", true);
     //$("#clear-btn").prop("hidden", true);
-    document.getElementById("indicator").textContent = "Indicator";
+    //document.getElementById("indicator").textContent = "Indicator";
     document.getElementById("edit-btn").textContent = "Edit";
     $("#edit-btn").hide().show(0);
     $("#label-btn").prop("hidden", true);

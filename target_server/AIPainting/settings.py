@@ -128,7 +128,6 @@ if platform.system() == "Linux":
         '/mnt/share/atlantix/AP/target_server/static',
     )
 elif platform.system() == "Windows":
-    STATIC_ROOT = 'D:/InteractiveImageSegmentation/target_server/static'
     STATICFILES_DIRS = (
         # Put strings here, like "/home/html/static" or "C:/www/django/static".
         # Always use forward slashes, even on Windows.
