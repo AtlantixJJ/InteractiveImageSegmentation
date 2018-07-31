@@ -164,6 +164,7 @@ function onMouseMove(event) {
       if (canvas_img != "inp_style_image") {
         canvas_img = "inp_style_image";
         $('#refine-btn').prop('hidden', true);
+        $('#type-selector').prop('hidden', true);
         $('#canvas').css('background-image', 'url(' + inp_style_image.src + ')');
         $('#image').attr('src', inp_style_image.src);
         $('#canvas').attr('height', img_h);
@@ -213,6 +214,8 @@ function set_state_dragging() {
   graph.has_result = true;
   dragging = true;
   resume_dragging = false;
+  resume_labeling = false;
+  pixel_labeling = false;
   ctrl_state = "finish";
   document.getElementById("edit-btn").textContent = "Dragging done";
   document.getElementById("edit-btn").hidden = false;
@@ -295,6 +298,7 @@ function setSegmentationImage(data) {
 }
 
 function setFinalImage(data) {
+  console.log("set final result");
   // close spinning
   setLoading(false);
   // check data
@@ -308,18 +312,21 @@ function setFinalImage(data) {
     return false;
   }
 
-  style_image = image_from_static_url(jdata.inp_image);
-  style_image.onload = function (event) {
-    $('#image').attr('src', style_image.src);
+  inp_image = image_from_static_url(jdata.inp_image);
+  inp_image.onload = function (event) {
+    $('#image').attr('src', inp_image.src);
     //$('#canvas').css('background-image', 'url(' + style_image.src + ')');
     //canvas_img = "style_image";
     $('#canvas').attr('height', img_h);
     $('#canvas').attr('width', img_w);
     graph.clear();
+    ctrl_state = "preview";
   }
 
+  video.onloadstart = function() {play_video();};
   video.src = "static/" + jdata.video + '?' + new Date().getTime();
-
+  
+  console.log(video);
 
   spinner.spin();
 }
@@ -491,7 +498,8 @@ function init() {
     canvas_img = 'style_image';
     $('#canvas').attr('height', img_h);
     $('#canvas').attr('width', img_w);
-    ratio = get_ratio();
+    if (!ratio)
+      ratio = get_ratio();
     //$('#edit-btn').prop('hidden', false);
   };
 
@@ -535,6 +543,8 @@ function onEdit() {
 
     //$("#down-image-href").prop("hidden", false);
     //$("#view-image-href").prop("hidden", false);
+    $("#refine-btn").prop("hidden", true);
+    $("#type-selector").prop("hidden", true);
     $("#back-href").prop("hidden", false);
     //$("#indicator").prop("hidden", true);
     //$("#clear-btn").prop("hidden", true);

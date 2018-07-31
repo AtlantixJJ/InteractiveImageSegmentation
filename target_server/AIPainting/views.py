@@ -40,14 +40,14 @@ import random
 reqid=0
 STATIC_DIR = "."
 ### Set this for interctive image edit debugging
-"""
+
 import platform
 if platform.system() == "Linux":
     DEBUG_EDIT = False
 else:
     DEBUG_EDIT = True
-"""
-DEBUG_EDIT = False
+
+#DEBUG_EDIT = False
 
 def now_milliseconds():
    return int(time.time() * 1000)
@@ -61,6 +61,7 @@ def homepage(request):
 
     if(description == None):
         if DEBUG_EDIT:
+            print("=> Debug test")
             inp_img = Image.open("req_0_content.jpg")
             inp_style_img = api.get_stylization(inp_img)
             inp_style_img.save(open(osj(STATIC_DIR, "req_0_style.jpg"), "wb"), format="JPEG")
@@ -120,6 +121,7 @@ def homepage(request):
         filename = ret.split('&')
         os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input = filename[1], output = filename[1].split('.')[0]))'''
 
+        #video_name = 'req_%d-oilpaint_video.mp4?%d' % (id, now_milliseconds())
         video_name = 'req_%d-oilpaint_video.mp4' % (id)
 
         return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s"%(description, 'req_%d_content.jpg' % id, style, adj, 'req_%d_style.jpg' % id, video_name))
@@ -295,7 +297,6 @@ def edit(request):
             user_mask.fill(2)
             user_mask[sketch_np[:, :, 0] > 200] = 1
             user_mask[sketch_np[:, :, 2] > 90] = 0
-            print(user_mask.max(), user_mask.min())
             fromarray(user_mask*127).save(open(osj(STATIC_DIR, "req_%d_userinput.png" % cur_id), "wb"))
             #fromarray(sketch_np[:, :, 0]).save(open(osj(STATIC_DIR, "req_%d_test.png" % cur_id), "wb"))
 

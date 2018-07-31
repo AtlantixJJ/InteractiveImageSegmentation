@@ -4,7 +4,7 @@ var video_width = null,
     video_height = null,
     original_width = null,
     original_height = null,
-    im_ratio = 1.0;
+    im_ratio = null;
 
 var video = null,
     played = false;
@@ -32,6 +32,7 @@ function play_video() {
     
     ctrl_state = "finish";
     video.onended = function() {
+        console.log('video on end');
         ctrl_state = "preview";
         document.getElementById("canvas").hidden = false;
         document.getElementById("vivideo").hidden = true;

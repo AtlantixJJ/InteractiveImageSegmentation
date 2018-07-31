@@ -20,15 +20,15 @@
         <script src="{% static 'js/graph.js' %}"></script>
         <script src="{% static 'js/draw.js' %}"></script>
         <script src="{% static 'js/control.js' %}"></script>
-        <script>first_load = true;</script>
+
         <title>Aesthetic Painting</title>
     </head>
    <body style = "background-image:url(/static/image/background.png);background-size:cover";>
 
-   <div style = "background-color:#F2F2F2;width:1460px;height:760px;margin:0 auto;margin-top:70px;box-shadow:3px 3px 3px #666">
+   <div style = "background-color:#F2F2F2;width:1460px;height:760px;margin:0 auto;margin-top:70px;box-shadow:3px 3px 3px #666;position: relative">
       <div style = "margin-top:26px;margin-left:26px;height:708px;width:1161px;float:left;">
         <div id="spin"></div>
-      	<img src =  "{{image}}" id = "image" onload="first_load = false;
+          <img src =  "{{image}}" id = "image" onload="
           if(this.width / this.height > 1161 / 708){
             record_size(this.height, this.width, this.width / 1161);
             this.height = this.height * 1161 / this.width;
@@ -42,22 +42,23 @@
           }
           img_h = this.height;
           img_w = this.width;
-          ratio = get_ratio();
+          if (!ratio)
+            ratio = get_ratio();
           this.hidden = true;" hidden>
         <canvas id="canvas" class="image"></canvas>
-        <video src = "{{video}}" autoplay muted id="vivideo" style = "object-fit:fill" onload="play_video();" hidden>
+        <video src = "{{video}}" autoplay muted id="vivideo" style = "object-fit:fill" onloadstart="console.log('video load start');" hidden>
       </div>
       
-      <div style = "float:left;width:222px;margin-left:26px;margin-top:20px;height:400px;text-align:right">
-      		<p style = "font-family:'Times New Roman', Times, serif; font-size:24px;">Content</p>
+      <div style = "float:left;width:222px;margin-left:26px;margin-top:20px;height:300px;text-align:right;line-height: 80%;">
+      		<p style = "font-family:'Times New Roman', Times, serif; font-size:24px;">Description</p>
             <p id = "description" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{description}}</p>
-            <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Adjective</p>
+            <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Aesthetic Word</p>
             <p id = "adj-word" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{adj}}</p>
             <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Style</p>
             <p id = "style-word" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{style}}</p>
       </div>
 
-      <div id="type-selector" style = "float:left;width:222px;margin-left:26px;margin-top:0px;height:100px;font-family:'Times New Roman', Times, serif; font-size:20px;text-align:right" hidden>
+      <div id="type-selector" style = "float:left;width:222px;margin-left:44px;margin-top:0px;height:100px;font-family:'Times New Roman', Times, serif; font-size:20px;text-align:right" hidden>
         <div class="pretty p-icon p-curve p-jelly" >
             <input id='type-foreground' type="radio" name="radio66">
             <div class="state p-warning">
@@ -75,14 +76,14 @@
         </div>
       </div>
 
-      <div style = "float:left;width:222px;margin-left:26px;margin-top:20px;height:100px;text-align:right" style="color: #000000">
+      <div style = "float:right;width:222px;margin-left:1210px;margin-top:0px;height:200px;text-align:right;color: #000000;position: absolute;bottom:0">
 
             <!--Atlantix-->
-            <a id = "refine-btn" href="#" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Refine</a>
+            <a id = "refine-btn" href="#" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right;color: #000000" hidden>Refine</a>
             <p></p>
-            <a id = "submit-btn" href="#" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Submit</a>
+            <a id = "submit-btn" href="#" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right;color: #000000" hidden>Submit</a>
             <p></p>
-            <a id = "edit-btn" href="#" style = "font-family:'Times New Roman', Times, serif; font-size:24px;" hidden>Edit</a>
+            <a id = "edit-btn" href="#" style = "font-family:'Times New Roman', Times, serif; font-size:24px;color: #000000" hidden>Edit</a>
             <p></p>
             <!--
             <span id = "indicator2" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Indicator2</span>
@@ -92,7 +93,7 @@
             <a id = "down-image-href" href = "{{image}}" download="{{image}}" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">Download</a>
             <a id = "view-image-href" href = "{{image}}" target="_blank" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right">View</a>
             -->
-            <a id = "back-href" href = /homepage style = "font-family:'Times New Roman', Times, serif; font-size:24px;">Back</a>
+            <a id = "back-href" href = /homepage style = "font-family:'Times New Roman', Times, serif; font-size:24px;color: #000000">Back</a>
       </div>
    </div>
 

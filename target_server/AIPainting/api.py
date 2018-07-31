@@ -10,15 +10,14 @@ import threading
 
 from inpaint import Inpainter
 
-"""
+
 import platform
 if platform.system() == "Linux":
     DEBUG_EDIT = False
 else:
     DEBUG_EDIT = True
     #export CUDA_VISIBLE_DEVICES=0
-"""
-DEBUG_EDIT = False
+
 if DEBUG_EDIT:
     from ns.api import NeuralStyle
     ### [MERGE] comment out this line to use our own stylization

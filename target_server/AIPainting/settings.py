@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+from os.path import join as osj
 import platform
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -125,7 +126,8 @@ if platform.system() == "Linux":
         # Put strings here, like "/home/html/static" or "C:/www/django/static".
         # Always use forward slashes, even on Windows.
         # Don't forget to use absolute paths, not relative paths.
-        '/mnt/share/atlantix/AP/target_server/static',
+        # '/mnt/share/atlantix/AP/target_server/static',
+        osj(BASE_DIR, "static"),
         # '/home/xujianjing/Aesthetic-Painting/web/target_server/static',
     )
 elif platform.system() == "Windows":
