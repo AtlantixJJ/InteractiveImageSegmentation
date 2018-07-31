@@ -6,7 +6,8 @@ var video_width = null,
     original_height = null,
     im_ratio = 1.0;
 
-var video = null;
+var video = null,
+    played = false;
 
 function record_size(height, width, resize_ratio) {
     original_width = width;
@@ -21,13 +22,17 @@ function play_video() {
     video_height = document.getElementById("image").height;
     document.getElementById("edit-btn").hidden = true;
     //document.getElementById("back-href").hidden = true;
-    document.getElementById("vivideo").width = video_width;
-    document.getElementById("vivideo").height = video_height;
-    document.getElementById("vivideo").hidden = false;
+    video = document.getElementById("vivideo");
+    video.width = video_width;
+    video.height = video_height;
+    video.hidden = false;
+    video.play();
     document.getElementById("image").hidden = true;
     document.getElementById("canvas").hidden = true;
-    video = document.getElementById("vivideo");
+    
+    ctrl_state = "finish";
     video.onended = function() {
+        ctrl_state = "preview";
         document.getElementById("canvas").hidden = false;
         document.getElementById("vivideo").hidden = true;
         document.getElementById("edit-btn").hidden = false;
@@ -40,5 +45,8 @@ function play_video() {
 }
 
 function cvd(){
-    play_video();
+    if (!played) {
+        play_video();
+        played = true;
+    }
 }

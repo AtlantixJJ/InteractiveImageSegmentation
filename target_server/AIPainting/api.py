@@ -18,7 +18,7 @@ else:
     DEBUG_EDIT = True
     #export CUDA_VISIBLE_DEVICES=0
 """
-DEBUG_EDIT = True
+DEBUG_EDIT = False
 if DEBUG_EDIT:
     from ns.api import NeuralStyle
     ### [MERGE] comment out this line to use our own stylization
@@ -52,6 +52,7 @@ class InteractiveSegmentation(object):
         if mask is None:
             cv.grabCut(self.image, self.raw_mask, tuple(rect), self.bgdmodel,self.fgdmodel,1,cv.GC_INIT_WITH_RECT)
         else:
+            print("=> Segment with: ", rect, self.image.shape, self.raw_mask.shape, self.bgdmodel.shape, self.fgdmodel.shape)
             cv.grabCut(self.image, self.raw_mask, tuple(rect), self.bgdmodel,self.fgdmodel,1,cv.GC_INIT_WITH_MASK)
         self.mask = np.where((self.raw_mask==1) + (self.raw_mask==3), 255, 0).astype('uint8')
         self.rect_mask = np.zeros_like(self.mask)

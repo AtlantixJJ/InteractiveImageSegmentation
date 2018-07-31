@@ -163,6 +163,7 @@ function onMouseMove(event) {
     } else if (dragging) {
       if (canvas_img != "inp_style_image") {
         canvas_img = "inp_style_image";
+        $('#refine-btn').prop('hidden', true);
         $('#canvas').css('background-image', 'url(' + inp_style_image.src + ')');
         $('#image').attr('src', inp_style_image.src);
         $('#canvas').attr('height', img_h);
@@ -184,6 +185,59 @@ function image_from_static_url(url) {
   return img;
 }
 
+function set_state_finetuning() {
+  //toastr.info("Orange line for object.\nGreen line for background.");
+  toastr.info("Please label part of object and background.");
+  label_type = "object";
+  //$("#indicator2").prop("hidden", false);
+  $("#label-btn").prop("hidden", false);
+  $("#submit-btn").prop("hidden", false);
+  $("#edit-btn").prop("hidden", true);
+  //document.getElementById('indicator').textContent = "Refine";
+  //document.getElementById('label-btn').textContent = "Background";
+
+  $('#refine-btn').prop('hidden', true);
+  $('#submit-btn').prop('hidden', false);
+  $('#type-selector').prop('hidden', false);
+  var fore = document.getElementById('type-foreground');
+  fore.checked = true;
+  graph.setLineWidth(5);
+  graph.setCurrentColor("#D2691E");
+
+  ctrl_state = "finetuning";
+  resume_labeling = true;
+  pixel_labeling = false;
+}
+
+function set_state_dragging() {
+  graph.has_result = true;
+  dragging = true;
+  resume_dragging = false;
+  document.getElementById("edit-btn").textContent = "Dragging done";
+  document.getElementById("edit-btn").hidden = false;
+}
+
+function set_state_boxing() {
+  //$("#down-image-href").prop("hidden", true);
+  //$("#view-image-href").prop("hidden", true);
+  //$("#back-href").prop("hidden", true);
+  //$("#indicator").prop("hidden", false);
+  //$("#clear-btn").prop("hidden", false);
+  //document.getElementById("indicator").textContent = "Draw a box";
+  document.getElementById("edit-btn").hidden = true;
+  document.getElementById("submit-btn").hidden = false;
+
+  toastr.info('Draw a box to select an object');
+  graph.setLineWidth(5);
+  graph.setCurrentColor("#000000");
+  ctrl_state = "editing";
+}
+
+function delayed_toaster(text, time) {
+  setTimeout(function(){toastr.info(text)}, time);
+}
+
+/// The callback of image segmentation
 function setSegmentationImage(data) {
   // close spinning
   setLoading(false);
@@ -194,29 +248,19 @@ function setSegmentationImage(data) {
     if (jdata.ok == 1) ok = 1;
   }
   
-  // line width and color
-  console.log("set segmentation image");
-  toastr.info('You can drag the object to another place');
-  toastr.info('Or you can refine the object by drawing simple lines');
-  label_type = "object";
-  //$("#indicator2").prop("hidden", false);
-  $("#label-btn").prop("hidden", false);
-  $("#submit-btn").prop("hidden", false);
-  //document.getElementById('indicator').textContent = "Refine";
-  //document.getElementById('label-btn').textContent = "Background";
-  document.getElementById('edit-btn').textContent = "Done";
-  graph.setLineWidth(5);
-  graph.setCurrentColor("#D2691E");
-  $("#edit-btn").hide().show(0);
-  ctrl_state = "finetuning";
-  resume_labeling = true;
-  pixel_labeling = false;
-
+  $('#refine-btn').prop('hidden', false);
+  
   if (!ok) {
+    // line width and color
+    toastr.info('Sorry, please refine the object by drawing simple lines.');
+    set_state_finetuning();
     spinner.spin();
     return false;
   }
 
+  toastr.info('You can drag the object to another place.');
+  if (ctrl_state != 'finetuning')
+    delayed_toaster('Or you can refine the object by drawing simple lines.', 5000);
   // read data
   seg_style_img = image_from_static_url(jdata.seg_style);
   seg_style_img.onload = function(event) {
@@ -239,9 +283,8 @@ function setSegmentationImage(data) {
     $('#canvas').attr('width', img_w);
     canvas_img = 'fused_image';
     // set flags to dragging
-    graph.has_result = true;
-    dragging = true;
-    resume_dragging = false;
+    set_state_dragging();
+
   }
   console.log(graph.ctx.lineWidth);
   // modify indicator
@@ -322,7 +365,9 @@ function onClear() {
   graph.has_result = false;
 }
 
+/// Submit to segmentation
 function onSubmit() {
+  $('#submit-btn').prop('hidden', true);
   if (graph && !loading) {
     setLoading(true);
     console.log(ratio);
@@ -353,6 +398,11 @@ function onSubmit() {
   }
 }
 
+/// Refine object by drwing lines
+function onRefine() {
+  set_state_finetuning();
+}
+
 function onGetFinalResult() {
   if (graph && !loading) {
     setLoading(true);
@@ -376,30 +426,6 @@ function onGetFinalResult() {
       rect: rect
     };
     $.get("done", formData, setFinalImage);
-  }
-}
-
-function onChangeLabel() {
-  if (label_type == "object") {
-    label_type = "background";
-    document.getElementById('label-btn').textContent = "Foreground";
-    //document.getElementById('indicator2').textContent = "Background";
-    //document.getElementById('label-btn').style.color = "#D2691E";
-    //document.getElementById('indicator').style.color = "#008B8B";
-    $("#label-btn").hide().show(0);
-    //$("#indicator").hide().show(0);
-    graph.setLineWidth(5);
-    graph.setCurrentColor("#008B8B");
-  } else if (label_type == "background") {
-    label_type = "object";
-    document.getElementById('label-btn').textContent = "Background";
-    //document.getElementById('indicator2').textContent = "Label object";
-    //document.getElementById('label-btn').style.color = "#008B8B";
-    //document.getElementById('indicator').style.color = "#D2691E";
-    $("#label-btn").hide().show(0);
-    $("#indicator").hide().show(0);
-    graph.setLineWidth(5);
-    graph.setCurrentColor("#D2691E");
   }
 }
 
@@ -461,6 +487,7 @@ function init() {
     canvas_img = 'style_image';
     $('#canvas').attr('height', img_h);
     $('#canvas').attr('width', img_w);
+    ratio = get_ratio();
     //$('#edit-btn').prop('hidden', false);
   };
 
@@ -476,38 +503,27 @@ function init() {
 function onEdit() {
   console.log("in start edit");
   if (ctrl_state == "preview") {
-    //$("#down-image-href").prop("hidden", true);
-    //$("#view-image-href").prop("hidden", true);
-    $("#back-href").prop("hidden", true);
-    //$("#indicator").prop("hidden", false);
-    //$("#clear-btn").prop("hidden", false);
-    //document.getElementById("indicator").textContent = "Draw a box";
-    document.getElementById("edit-btn").textContent = "Submit";
-    $("#edit-btn").hide().show(0);
-
-    toastr.info('Draw a box to select an object');
-    graph.setLineWidth(5);
-    graph.setCurrentColor("#000000");
-    ratio = get_ratio();
-    ctrl_state = "editing";
+    set_state_boxing();
   } else if (ctrl_state == "editing") {
-    onSubmit();
-    graph.setLineWidth(5);
-    graph.setCurrentColor("#D2691E");
-    
-    ctrl_state = "finetuning";
+    ctrl_state = "finish";
+
+    //onSubmit();
+    //graph.setLineWidth(5);
+    //graph.setCurrentColor("#D2691E");
     //document.getElementById('indicator2').textContent = "Foreground";
     //document.getElementById('label-btn').style.color = "#008B8B";
     //document.getElementById('indicator2').style.color = "#D2691E";
   } else if (ctrl_state == "finetuning") {
     //$("#indicator2").prop("hidden", true);
+    $('#refine-btn').prop("hidden", true);
     $("#label-btn").prop("hidden", true);
     ctrl_state = "finish";
     resume_labeling = false;
     pixel_labeling = false;
-  }else if (ctrl_state == "finish") {
+  }
+  
+  if (ctrl_state == "finish") {
     onGetFinalResult();
-    ctrl_state = "preview";
     graph.has_result = false;
     dragging = false;
     resume_dragging = false;
@@ -524,8 +540,20 @@ function onEdit() {
     $("#label-btn").prop("hidden", true);
     $('#submit-btn').prop("hidden", true);
 
-    var vid = document.getElementById('vivideo');
+    played = false;
+    //var vid = document.getElementById('vivideo');
+    //play_video();
   }
+}
+
+function onSelectForeground() {
+  graph.setLineWidth(5);
+  graph.setCurrentColor("#f0ad4e");
+}
+
+function onSelectBackground() {
+  graph.setLineWidth(5);
+  graph.setCurrentColor("#5cb85c");
 }
 
 $(document).ready(function () {
@@ -544,6 +572,9 @@ $(document).ready(function () {
 
   $('#edit-btn').click(onEdit);
   $('#submit-btn').click(onSubmit);
+  $('#refine-btn').click(onRefine);
   //$('#clear-btn').click(onClear);
-  $('#label-btn').click(onChangeLabel);
+  //$('#label-btn').click(onChangeLabel);
+  $('#type-foreground').click(onSelectForeground);
+  $('#type-background').click(onSelectBackground);
 });

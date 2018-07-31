@@ -46,7 +46,7 @@ if platform.system() == "Linux":
 else:
     DEBUG_EDIT = True
 """
-DEBUG_EDIT = True
+DEBUG_EDIT = False
 
 def homepage(request):
     #myapp = app.GlamorousApp()
@@ -112,7 +112,7 @@ def homepage(request):
         filename = ret.split('&')
         os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input = filename[1], output = filename[1].split('.')[0]))'''
 
-        return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s"%(description, 'req_%d_content.jpg' % id, style, adj, 'req_%d_style.jpg' % id, 'req_%d_draw.mp4' % id))
+        return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s"%(description, 'req_%d_content.jpg' % id, style, adj, 'req_%d_style.jpg' % id, 'req_%d-oilpaint_video.mp4' % id))
 
 def consequence(request):
     if request.method == "GET":
@@ -173,6 +173,7 @@ def edit_done(request):
 
         inp_content_image = Image.open(osj(STATIC_DIR, "req_%d_inpcontent.jpg" % cur_id)).convert("RGBA")
         s = [inp_content_image.size[1], inp_content_image.size[0]]
+        inp_content_image_np = np.asarray(inp_content_image)
         seg_mask_np = np.ones((s[0], s[1], 4), dtype="uint8")
 
         seg_image = Image.open(osj(STATIC_DIR, "req_%d_seg.png" % cur_id))
@@ -180,14 +181,12 @@ def edit_done(request):
         bg_x, ed_x = seg_st[1], seg_st[1] + seg_image_np.shape[0]
         bg_y, ed_y = seg_st[0], seg_st[0] + seg_image_np.shape[1]
 
-        content_image = Image.open(osj(STATIC_DIR, "req_%d_content.png" % cur_id))
+        content_image = Image.open(osj(STATIC_DIR, "req_%d_content.jpg" % cur_id))
         content_image_np=np.asarray(content_image)
 
         mask = Image.open(osj(STATIC_DIR, "req_%d_mask.png" % cur_id))
-        mask_np = np.asarray(mask)
-        
-        fused_content_image = api.seamlessClone(content_image_np, mask_np, inp_content_image, (bg_x, bg_y))
-
+        mask_np = np.asarray(mask).copy()
+    
         if ed_x > seg_mask_np.shape[0]:
             ed_x = seg_mask_np.shape[0]
         if ed_y > seg_mask_np.shape[1]:
@@ -204,10 +203,16 @@ def edit_done(request):
         print(bg_x, ed_x, bg_y, ed_y)
 
         seg_mask_np[bg_x:ed_x, bg_y:ed_y] = seg_image_np[stc_x:len_x, stc_y:len_y]
-        dst = seg_image_np.copy()
-        #seg_mask = fromarray(seg_mask_np)
-        #fused_content_image = Image.alpha_composite(inp_content_image, seg_mask).convert("RGB")
-        
+        seg_mask = fromarray(seg_mask_np)
+        fused_content_image = Image.alpha_composite(inp_content_image, seg_mask).convert("RGB")
+
+        #newmask = np.zeros_like(mask_np)
+        #newmask[rect[0]+stc_x:rect[0]+stc_x+len_x, rect[1]+stc_y:rect[1]+stc_y+len_y].fill(1)
+        #mask_np *= newmask
+        #fromarray(mask_np).save(open(osj(STATIC_DIR, "req_%d_testmask.png" % cur_id), "wb"))
+        #fused_content_image = api.seamlessClone(
+        #    content_image_np, mask_np,
+        #    content_image_np, (bg_x, bg_y))
 
         ### [MERGE] change this to ordinary stylization, with video generation
         if DEBUG_EDIT:
@@ -275,8 +280,10 @@ def edit(request):
             user_mask = np.zeros((sketch_np.shape[0], sketch_np.shape[1]), dtype="uint8")
             user_mask.fill(2)
             user_mask[sketch_np[:, :, 0] > 200] = 1
-            user_mask[sketch_np[:, :, 2] > 120] = 0
-            fromarray(user_mask).save(open(osj(STATIC_DIR, "req_%d_userinput.png" % cur_id), "wb"))
+            user_mask[sketch_np[:, :, 2] > 90] = 0
+            print(user_mask.max(), user_mask.min())
+            fromarray(user_mask*127).save(open(osj(STATIC_DIR, "req_%d_userinput.png" % cur_id), "wb"))
+            #fromarray(sketch_np[:, :, 0]).save(open(osj(STATIC_DIR, "req_%d_test.png" % cur_id), "wb"))
 
         shape = (content_image.size[0] // 4 * 4, content_image.size[1] // 4  * 4)
         content_image = content_image.resize(shape)

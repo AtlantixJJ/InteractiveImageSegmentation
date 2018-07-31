@@ -9,4 +9,5 @@ io.imsave("tmp.png", out)
 
 """
 http://166.111.139.44:8003/?description=powerplant&style=4&adj=joyful
+localhost:2333
 """

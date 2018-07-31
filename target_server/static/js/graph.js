@@ -40,9 +40,9 @@ function Graph(document) {
   };
   
   this.drawImage = function (img, x, y) {
-    console.log("drawImage", this.ctx.lineWidth);
+    //console.log("drawImage", this.ctx.lineWidth);
     this.ctx.drawImage(img, x, y, img.width, img.height);
-    console.log("After", this.ctx.lineWidth);
+    //console.log("After", this.ctx.lineWidth);
   };
 
   this.clear = function () {

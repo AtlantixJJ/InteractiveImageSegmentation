@@ -9,6 +9,7 @@
         <link href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.bootcss.com/noUiSlider/11.1.0/nouislider.min.css" rel="stylesheet">
         <link href="{% static 'css/style.css' %}" rel="stylesheet">
+        <link href="{% static 'css/pretty-checkbox.min.css' %}" rel="stylesheet">
         <link href="{% static 'css/toastr.min.css' %}" rel="stylesheet">
         <!--
           <link href="https://raw.githubusercontent.com/CodeSeven/toastr/master/build/toastr.min.css" rel="stylesheet">
@@ -41,12 +42,13 @@
           }
           img_h = this.height;
           img_w = this.width;
+          ratio = get_ratio();
           this.hidden = true;" hidden>
         <canvas id="canvas" class="image"></canvas>
         <video src = "{{video}}" autoplay muted id="vivideo" style = "object-fit:fill" onload="play_video();" hidden>
       </div>
       
-      <div style = "float:left;width:222px;margin-left:26px;margin-top:20px;height:500px;text-align:right">
+      <div style = "float:left;width:222px;margin-left:26px;margin-top:20px;height:400px;text-align:right">
       		<p style = "font-family:'Times New Roman', Times, serif; font-size:24px;">Content</p>
             <p id = "description" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{description}}</p>
             <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Adjective</p>
@@ -55,9 +57,29 @@
             <p id = "style-word" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{style}}</p>
       </div>
 
-      <div style = "float:left;width:222px;margin-left:26px;margin-top:20px;height:100px;text-align:right">
-            <!--Atlantix-->
+      <div id="type-selector" style = "float:left;width:222px;margin-left:26px;margin-top:0px;height:100px;font-family:'Times New Roman', Times, serif; font-size:20px;text-align:right" hidden>
+        <div class="pretty p-icon p-curve p-jelly" >
+            <input id='type-foreground' type="radio" name="radio66">
+            <div class="state p-warning">
+                <i class="icon mdi mdi-check"></i>
+                <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object</label>
+            </div>
+        </div>
+        <p></p>
+        <div class="pretty p-icon p-curve p-jelly">
+            <input id='type-background' type="radio" name="radio66">
+            <div class="state p-success">
+                <i class="icon mdi mdi-check"></i>
+                <label>Background</label>
+            </div>
+        </div>
+      </div>
 
+      <div style = "float:left;width:222px;margin-left:26px;margin-top:20px;height:100px;text-align:right">
+
+            <!--Atlantix-->
+            <a id = "refine-btn" href="#" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Refine</a>
+            <p></p>
             <a id = "submit-btn" href="#" style = "margin-left:100px;font-family:'Times New Roman', Times, serif; font-size:24px;text-align:right" hidden>Submit</a>
             <p></p>
             <a id = "edit-btn" href="#" style = "font-family:'Times New Roman', Times, serif; font-size:24px;" hidden>Edit</a>
