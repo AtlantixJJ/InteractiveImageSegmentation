@@ -188,7 +188,7 @@ function image_from_static_url(url) {
 
 function set_state_finetuning() {
   //toastr.info("Orange line for object.\nGreen line for background.");
-  toastr.info("Please label part of object and background.");
+  //toastr.info("Please label part of object and background.", {timeOut: 5000});
   label_type = "object";
   //$("#indicator2").prop("hidden", false);
   $("#label-btn").prop("hidden", false);
@@ -262,7 +262,7 @@ function setSegmentationImage(data) {
     return false;
   }
 
-  toastr.info('You can drag the object to another place.');
+  toastr.info('You can drag the object to another place.', {timeOut: 10000});
   if (ctrl_state != 'finetuning')
     delayed_toaster('Or you can refine the object by drawing simple lines.', 5000);
   // read data
@@ -590,4 +590,7 @@ $(document).ready(function () {
   //$('#label-btn').click(onChangeLabel);
   $('#type-foreground').click(onSelectForeground);
   $('#type-background').click(onSelectBackground);
+
+  toastr.options.positionClass = "toast-top-center";
+
 });

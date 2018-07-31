@@ -80,7 +80,7 @@ def homepage(request):
         
         if not DEBUG_EDIT:
             os.system('./testapp %s %d %s %s' % (description, style, adj, 'req_'+str(id)))
-            cmd = "/usr/bin/ffmpeg -i %s -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 -y %s &" % ('req_%d-oilpaint_video.avi' % id, 'req_%d-oilpaint_video.mp4' % id)
+            cmd = "/usr/bin/ffmpeg -i %s -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 -y %s" % ('req_%d-oilpaint_video.avi' % id, 'req_%d-oilpaint_video.mp4' % id)
             os.system(cmd)
             print(cmd)
             #print("________________")
@@ -233,7 +233,7 @@ def edit_done(request):
             file_name = osj(STATIC_DIR, "req_%d_content.jpg" % cur_id)
             fused_content_image.save(open(file_name, "wb"), format="JPEG")
             os.system('./testapp %s %d %s %s' % (file_name, style_id, adj, 'req_'+str(cur_id)))
-            cmd = "/usr/bin/ffmpeg -i %s -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 -y %s &" % ('req_%d-oilpaint_video.avi' % cur_id, 'req_%d-oilpaint_video.mp4' % cur_id)
+            cmd = "/usr/bin/ffmpeg -i %s -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 -y %s" % ('req_%d-oilpaint_video.avi' % cur_id, 'req_%d-oilpaint_video.mp4' % cur_id)
             os.system(cmd)
             print(cmd)
             fused_style_image = Image.open("req_%d.jpg" % cur_id)
@@ -251,6 +251,7 @@ def edit_done(request):
                 1)
         json = json.replace("\\", "\\\\")
         print(json)
+        print("=> Done")
         return HttpResponse(json)
 
 @csrf_exempt
@@ -358,6 +359,7 @@ def edit(request):
             )
         json = json.replace("\\", "\\\\")
         print(json)
+        print("=> Done")
         return HttpResponse(json)
     except Exception as e:
         print(e)

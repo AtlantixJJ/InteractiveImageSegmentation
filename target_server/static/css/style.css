@@ -1,4 +1,11 @@
 @charset "utf-8";
+.my-position {
+  position:absolute;
+  top:400px;
+  width:220px;
+  right:800px;
+  height:auto;
+}
 .title {
   text-align: center;
   font-size: 44pt;
