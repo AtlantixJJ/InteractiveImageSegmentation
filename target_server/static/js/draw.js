@@ -181,7 +181,7 @@ function onMouseMove(event) {
 
 function image_from_static_url(url) {
   var img = new Image();
-  img.src = "static/" + url + "?" + new Date().getTime();;
+  img.src = "static/" + url + "?" + new Date().getTime();
   return img;
 }
 
@@ -310,12 +310,15 @@ function setFinalImage(data) {
   style_image = image_from_static_url(jdata.inp_image);
   style_image.onload = function (event) {
     $('#image').attr('src', style_image.src);
-    $('#canvas').css('background-image', 'url(' + style_image.src + ')');
-    canvas_img = "style_image";
+    //$('#canvas').css('background-image', 'url(' + style_image.src + ')');
+    //canvas_img = "style_image";
     $('#canvas').attr('height', img_h);
     $('#canvas').attr('width', img_w);
     graph.clear();
   }
+
+  video.src = jdata.video + '?' + new Date().getTime();
+
 
   spinner.spin();
 }
@@ -541,7 +544,6 @@ function onEdit() {
     $('#submit-btn').prop("hidden", true);
 
     played = false;
-    //var vid = document.getElementById('vivideo');
     //play_video();
   }
 }

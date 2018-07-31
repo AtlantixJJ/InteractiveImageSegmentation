@@ -22,6 +22,7 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 from base64 import b64encode, b64decode
+import time
 #import urllib2
 #import thread
 
@@ -47,6 +48,9 @@ else:
     DEBUG_EDIT = True
 """
 DEBUG_EDIT = False
+
+def now_milliseconds():
+   return int(time.time() * 1000)
 
 def homepage(request):
     #myapp = app.GlamorousApp()
@@ -75,12 +79,12 @@ def homepage(request):
         
         if not DEBUG_EDIT:
             os.system('./testapp %s %d %s %s' % (description, style, adj, 'req_'+str(id)))
+            os.system("ffmpeg -i '%s' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '%s' &" % ('req_%d-oilpaint_video.avi' % id, 'req_%d-oilpaint_video.mp4' % id))
             content_image = Image.open("req_%d-src.jpg" % id)
-            print(content_image.size)
             style_image = Image.open("req_%d.jpg" % id)
             os.system("cp req_%d.jpg req_%d_style.jpg" % (id, id))
-            print(style_image.size)
             content_image.resize(style_image.size).save("req_%d_content.jpg" % id)
+
         '''def call_server():
             os.system('./server %d /mnt/share/ky/image_data' % portno)
         thread.start_new_thread(call_server, ())
@@ -112,7 +116,9 @@ def homepage(request):
         filename = ret.split('&')
         os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input = filename[1], output = filename[1].split('.')[0]))'''
 
-        return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s"%(description, 'req_%d_content.jpg' % id, style, adj, 'req_%d_style.jpg' % id, 'req_%d-oilpaint_video.mp4' % id))
+        video_name = 'req_%d-oilpaint_video.mp4?%d' % (id, now_milliseconds())
+
+        return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s"%(description, 'req_%d_content.jpg' % id, style, adj, 'req_%d_style.jpg' % id, video_name))
 
 def consequence(request):
     if request.method == "GET":
@@ -221,7 +227,9 @@ def edit_done(request):
             file_name = osj(STATIC_DIR, "req_%d_content.jpg" % cur_id)
             fused_content_image.save(open(file_name, "wb"), format="JPEG")
             os.system('./testapp %s %d %s %s' % (file_name, style_id, adj, 'req_'+str(cur_id)))
+            os.system("ffmpeg -i '%s' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '%s' &" % ('req_%d-oilpaint_video.avi' % cur_id, 'req_%d-oilpaint_video.mp4' % cur_id))
             fused_style_image = Image.open("req_%d.jpg" % cur_id)
+            #video = 'req_%d-oilpaint_video.mp4?%d' % (cur_id, now_milliseconds())
         ###
 
         fused_content_image.save(open(osj(STATIC_DIR, "req_%d_content.jpg" % cur_id), "wb"), format="JPEG")
