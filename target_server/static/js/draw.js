@@ -202,7 +202,7 @@ function set_state_finetuning() {
   var fore = document.getElementById('type-foreground');
   fore.checked = true;
   graph.setLineWidth(5);
-  graph.setCurrentColor("#D2691E");
+  graph.setCurrentColor("#f0ad4e");
 
   ctrl_state = "finetuning";
   resume_labeling = true;
@@ -213,6 +213,7 @@ function set_state_dragging() {
   graph.has_result = true;
   dragging = true;
   resume_dragging = false;
+  ctrl_state = "finish";
   document.getElementById("edit-btn").textContent = "Dragging done";
   document.getElementById("edit-btn").hidden = false;
 }
@@ -271,7 +272,7 @@ function setSegmentationImage(data) {
     seg_st.y = Math.floor(jdata.st_x / ratio);
     graph.drawImage(seg_style_img, seg_st.x, seg_st.y);
     graph.setLineWidth(5);
-    graph.setCurrentColor("#D2691E");
+    graph.setCurrentColor("#f0ad4e");
   }
   mask            = image_from_static_url(jdata.mask_image);
   inp_style_image = image_from_static_url(jdata.inp_image);
@@ -317,7 +318,7 @@ function setFinalImage(data) {
     graph.clear();
   }
 
-  video.src = jdata.video + '?' + new Date().getTime();
+  video.src = "static/" + jdata.video + '?' + new Date().getTime();
 
 
   spinner.spin();
