@@ -10,6 +10,7 @@ var video = null,
     played = false;
 
 function record_size(height, width, resize_ratio) {
+    if (im_ratio) return false;
     original_width = width;
     original_height = height;
     im_ratio = resize_ratio;

@@ -318,19 +318,20 @@ function setFinalImage(data) {
 
   inp_image = image_from_static_url(jdata.inp_image);
   inp_image.onload = function (event) {
-    $('#image').attr('src', inp_image.src);
-    //$('#canvas').css('background-image', 'url(' + style_image.src + ')');
-    //canvas_img = "style_image";
+    style_image.src = inp_image.src;
+    $('#image').attr('src', style_image.src);
+    $('#canvas').css('background-image', 'url(' + style_image.src + ')');
+    canvas_img = "style_image";
     $('#canvas').attr('height', img_h);
     $('#canvas').attr('width', img_w);
     graph.clear();
     ctrl_state = "preview";
   }
 
-  video.onloadstart = function() {play_video();};
-  video.src = "static/" + jdata.video + '?' + new Date().getTime();
+  //video.onloadstart = function() {play_video();};
+  //video.src = "static/" + jdata.video + '?' + new Date().getTime();
   
-  console.log(video);
+  //console.log(video);
 
   spinner.spin();
 }
@@ -560,7 +561,7 @@ function onEdit() {
     $("#label-btn").prop("hidden", true);
     $('#submit-btn').prop("hidden", true);
 
-    played = false;
+    //played = true;
     //play_video();
   }
 }

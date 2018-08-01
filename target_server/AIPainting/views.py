@@ -291,13 +291,13 @@ def edit(request):
         rect = [min(rc[0], rc[2]), min(rc[1], rc[3]), abs(rc[0] - rc[2]), abs(rc[1] - rc[3])]
         #rect = [rect[1], rect[0], rect[3], rect[2]]
 
-        content_image = Image.open(osj(STATIC_DIR, content))
+        content_image = Image.open(osj(STATIC_DIR, content)).convert("RGB")
 
         user_mask = None
         if sketch is not None:
-            sketch = Image.open(BytesIO(sketch))
+            sketch = Image.open(BytesIO(sketch)).convert("RGB")
             sketch = sketch.resize(content_image.size)
-            sketch_np = np.asarray(sketch, dtype="uint8")[:, :, :3]
+            sketch_np = np.asarray(sketch, dtype="uint8")
             user_mask = np.zeros((sketch_np.shape[0], sketch_np.shape[1]), dtype="uint8")
             user_mask.fill(2)
             user_mask[sketch_np[:, :, 0] > 200] = 1
@@ -305,9 +305,9 @@ def edit(request):
             fromarray(user_mask*127).save(open(osj(STATIC_DIR, "req_%d_userinput.png" % cur_id), "wb"))
             #fromarray(sketch_np[:, :, 0]).save(open(osj(STATIC_DIR, "req_%d_test.png" % cur_id), "wb"))
 
-        style_image = Image.open(osj(STATIC_DIR, image))
-        content_image_np = np.asarray(content_image, dtype="uint8")[:, :, :3]
-        style_image_np = np.asarray(style_image, dtype="uint8")[:, :, :3]
+        style_image = Image.open(osj(STATIC_DIR, image)).convert("RGB")
+        content_image_np = np.asarray(content_image, dtype="uint8")
+        style_image_np = np.asarray(style_image, dtype="uint8")
 
         # segment image; inpainted image; segmentation mask; bounding box
         print("=> Do segmentation")
