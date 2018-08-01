@@ -44,6 +44,7 @@ STATIC_DIR = "."
 import platform
 if platform.system() == "Linux":
     DEBUG_EDIT = False
+    import match_word
 else:
     DEBUG_EDIT = True
 
@@ -79,7 +80,8 @@ def homepage(request):
         portno = random.randint(23000, 23111)
         
         if not DEBUG_EDIT:
-            os.system('./testapp %s %d %s %s' % (description, style, adj, 'req_'+str(id)))
+            avg_adj = match_word.do_match(adj)
+            os.system('./testapp %s %d %s %s' % (description, style, avg_adj, 'req_'+str(id)))
             cmd = "/usr/bin/ffmpeg -i %s -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 -y %s" % ('req_%d_draw.avi' % id, 'req_%d_draw.mp4' % id)
             os.system(cmd)
             print(cmd)
@@ -236,7 +238,8 @@ def edit_done(request):
         else:
             file_name = osj(STATIC_DIR, "req_%d_content.jpg" % cur_id)
             fused_content_image.save(open(file_name, "wb"), format="JPEG")
-            os.system('./testapp %s %d %s %s' % (file_name, style_id, adj, 'req_'+str(cur_id)))
+            avg_adj = match_word.do_match(adj)
+            os.system('./testapp %s %d %s %s' % (description, style_id, avg_adj, 'req_'+str(cur_id)))
             cmd = "/usr/bin/ffmpeg -i %s -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 -y %s" % ('req_%d_draw.avi' % cur_id, 'req_%d_draw.mp4' % cur_id)
             os.system(cmd)
             print(cmd)
