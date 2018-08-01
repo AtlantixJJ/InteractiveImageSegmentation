@@ -136,8 +136,10 @@ function onMouseDown(event) {
 
 function onMouseUp(event) {
   var mouse = getMouse(event);
-  if (drawing_rect && mouse)
-    rect_ed = mouse;
+  if (drawing_rect && mouse) {
+    console.log(rect_ed, mouse);
+    //rect_ed = mouse;
+  }
   if (pixel_labeling) {
     resume_labeling = true;
     pixel_labeling = false;

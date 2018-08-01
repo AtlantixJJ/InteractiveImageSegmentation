@@ -80,15 +80,19 @@ def homepage(request):
         
         if not DEBUG_EDIT:
             os.system('./testapp %s %d %s %s' % (description, style, adj, 'req_'+str(id)))
-            cmd = "/usr/bin/ffmpeg -i %s -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 -y %s" % ('req_%d-oilpaint_video.avi' % id, 'req_%d-oilpaint_video.mp4' % id)
+            cmd = "/usr/bin/ffmpeg -i %s -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 -y %s" % ('req_%d_draw.avi' % id, 'req_%d_draw.mp4' % id)
             os.system(cmd)
             print(cmd)
             #print("________________")
             #os.system("which ffmpeg")
             content_image = Image.open("req_%d-google.jpg" % id)
             style_image = Image.open("req_%d.jpg" % id)
+            shape = (style_image.size[0] // 4 * 4, style_image.size[1] // 4  * 4)
+            style_image = style_image.resize(shape)
+            style_image.save("req_%d_style.jpg" % id)
             os.system("cp req_%d.jpg req_%d_style.jpg" % (id, id))
-            content_image.resize(style_image.size).save("req_%d_content.jpg" % id)
+            content_image = content_image.resize(style_image.size)
+            content_image.save("req_%d_content.jpg" % id)
 
         '''def call_server():
             os.system('./server %d /mnt/share/ky/image_data' % portno)
@@ -122,7 +126,7 @@ def homepage(request):
         os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input = filename[1], output = filename[1].split('.')[0]))'''
 
         #video_name = 'req_%d-oilpaint_video.mp4?%d' % (id, now_milliseconds())
-        video_name = 'req_%d-oilpaint_video.mp4' % (id)
+        video_name = 'req_%d_draw.mp4' % (id)
 
         return HttpResponseRedirect("/consequence?description=%s&content=%s&style=%s&adj=%s&image=%s&video=%s"%(description, 'req_%d_content.jpg' % id, style, adj, 'req_%d_style.jpg' % id, video_name))
 
@@ -233,7 +237,7 @@ def edit_done(request):
             file_name = osj(STATIC_DIR, "req_%d_content.jpg" % cur_id)
             fused_content_image.save(open(file_name, "wb"), format="JPEG")
             os.system('./testapp %s %d %s %s' % (file_name, style_id, adj, 'req_'+str(cur_id)))
-            cmd = "/usr/bin/ffmpeg -i %s -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 -y %s" % ('req_%d-oilpaint_video.avi' % cur_id, 'req_%d-oilpaint_video.mp4' % cur_id)
+            cmd = "/usr/bin/ffmpeg -i %s -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 -y %s" % ('req_%d_draw.avi' % cur_id, 'req_%d_draw.mp4' % cur_id)
             os.system(cmd)
             print(cmd)
             fused_style_image = Image.open("req_%d.jpg" % cur_id)
@@ -301,8 +305,6 @@ def edit(request):
             fromarray(user_mask*127).save(open(osj(STATIC_DIR, "req_%d_userinput.png" % cur_id), "wb"))
             #fromarray(sketch_np[:, :, 0]).save(open(osj(STATIC_DIR, "req_%d_test.png" % cur_id), "wb"))
 
-        shape = (content_image.size[0] // 4 * 4, content_image.size[1] // 4  * 4)
-        content_image = content_image.resize(shape)
         style_image = Image.open(osj(STATIC_DIR, image))
         content_image_np = np.asarray(content_image, dtype="uint8")[:, :, :3]
         style_image_np = np.asarray(style_image, dtype="uint8")[:, :, :3]
