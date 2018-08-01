@@ -46,15 +46,15 @@
             ratio = get_ratio();
           this.hidden = true;" hidden>
         <canvas id="canvas" class="image"></canvas>
-        <video src = "{{video}}" autoplay muted id="vivideo" style = "object-fit:fill" onloadstart="console.log('video load start');" hidden>
+        <video src = "{{video}}" autoplay muted id="vivideo" style = "object-fit:fill" onloadstart="console.log('video load start');" controls type='video/mp4' hidden>
       </div>
-      
+
       <div style = "float:left;width:222px;margin-left:26px;margin-top:20px;height:300px;text-align:right;line-height: 80%;">
-      		<p style = "font-family:'Times New Roman', Times, serif; font-size:24px;">Description</p>
+      		<p style = "font-family:'Times New Roman', Times, serif; font-size:24px;">Content</p>
             <p id = "description" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{description}}</p>
-            <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Aesthetic Word</p>
+            <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Aesthetic Effect</p>
             <p id = "adj-word" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{adj}}</p>
-            <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Style</p>
+            <p style = "font-family:'Times New Roman', Times, serif; font-size:24px;margin-top:50px;">Artistic Style</p>
             <p id = "style-word" style = "color:#666;font-family:Arial, Helvetica, sans-serif; font-size:18px;">{{style}}</p>
       </div>
 

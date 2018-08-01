@@ -19,6 +19,7 @@ function record_size(height, width, resize_ratio) {
 function get_ratio() {return im_ratio;}
 
 function play_video() {
+    console.log("play video");
     video_width = document.getElementById("image").width;
     video_height = document.getElementById("image").height;
     document.getElementById("edit-btn").hidden = true;
@@ -27,7 +28,7 @@ function play_video() {
     video.width = video_width;
     video.height = video_height;
     video.hidden = false;
-    video.play();
+    video.play().catch((error) => {console.log("Error: " + error);});
     document.getElementById("image").hidden = true;
     document.getElementById("canvas").hidden = true;
     

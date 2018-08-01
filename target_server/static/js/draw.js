@@ -381,6 +381,7 @@ function onSubmit() {
   $('#submit-btn').prop('hidden', true);
   $('#back-href').prop('hidden', true);
   $('#cancel-btn').prop('hidden', true);
+  $('#type-selector').prop('hidden', true);
   toastr.info('Please wait for a few moments.');
   if (graph && !loading) {
     setLoading(true);
@@ -478,7 +479,7 @@ function init() {
   ctrl_state = "preview";
 
   style_image = new Image();
-  style_image.src = image.src;
+  style_image.src = image.src + "?" + new Date();
 
   style_image.onload = function () {
     console.log("style image onload");

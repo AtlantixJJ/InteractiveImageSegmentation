@@ -161,8 +161,8 @@ def get_style_id(style):
     stylelist = ['Abstract painting','Post-impression','Neo-impression','Chinese ink painting','Suprematism','Impressionism']
     for i in range(len(stylelist)):
         if stylelist[i] == style:
-            return i
-    return 0
+            return i + 1
+    return 1
 
 @csrf_exempt
 def edit_done(request):
