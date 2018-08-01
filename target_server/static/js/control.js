@@ -37,6 +37,7 @@ function play_video() {
         document.getElementById("canvas").hidden = false;
         document.getElementById("vivideo").hidden = true;
         document.getElementById("edit-btn").hidden = false;
+        document.getElementById("down-image-href").hidden = false;
         $('#canvas').css('background-image', 'url(' + document.getElementById("image").src + ')');
         $('#canvas').css('background-size', video_width + 'px ' + video_height + 'px');
         canvas_img = 'style_image';
